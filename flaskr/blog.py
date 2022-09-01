@@ -18,8 +18,8 @@ def welcome():
     return render_template("blog/welcome.html")
 
 
-@bp.route("/")
-def index():
+@bp.route("/output")
+def output():
     """Use fetchall() for: Show all the posts, most recent first.
     But we will now just show the latest variant"""
     db = get_db()
@@ -91,8 +91,7 @@ def index():
         " FROM post p JOIN user u ON p.author_id = u.id"
         " ORDER BY created DESC"
     ).fetchmany()
-    return render_template("blog/index.html", posts=posts)
-
+    return render_template("blog/output.html", posts=posts)
 
 
 def get_post(id, check_author=True):
@@ -350,5 +349,5 @@ def create():
                     clinvar_link))
 
                 db.commit()
-                return redirect(url_for("blog.index"))
+                return redirect(url_for("blog.output"))
     return render_template("blog/create.html")
