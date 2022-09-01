@@ -13,9 +13,9 @@ from flaskr.info import *
 
 bp = Blueprint("blog", __name__)
 
-@bp.route("/start_screen_after_loggin")
-def start_screen_after_loggin():
-    return render_template("blog/start_screen_after_loggin.html")
+@bp.route("/welcome")
+def welcome():
+    return render_template("blog/welcome.html")
 
 
 @bp.route("/")
