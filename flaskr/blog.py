@@ -13,7 +13,7 @@ from flaskr.info import *
 
 bp = Blueprint("blog", __name__)
 
-@bp.route("/welcome")
+@bp.route("/")
 def welcome():
     return render_template("blog/welcome.html")
 
