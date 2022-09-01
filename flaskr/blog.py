@@ -19,10 +19,13 @@ def welcome():
 
 
 @bp.route("/output")
+@login_required
 def output():
     """Use fetchall() for: Show all the posts, most recent first.
     But we will now just show the latest variant"""
     db = get_db()
+
+    #check_author and post["author_id"] != g.user["id"]
 
     posts = db.execute(
         "SELECT p.id, title, created, author_id, username, "
