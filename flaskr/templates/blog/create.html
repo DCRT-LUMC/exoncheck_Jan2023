@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Upload variant{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="title">Variant (HGVS format)</label>
+    <input name="title" id="title" value="{{ request.form['title'] }}" >
+    <input type="submit" value="Save">
+  </form>
+{% endblock %}
