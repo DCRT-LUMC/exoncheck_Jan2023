@@ -92,7 +92,9 @@ def output():
         "clinvar_link"
 
         " FROM post p JOIN user u ON p.author_id = u.id"
-        " ORDER BY created DESC"
+        # " ORDER BY created DESC"
+        " WHERE p.id = ?",
+        (g.user["id"],),
     ).fetchall()
     return render_template("blog/output.html", posts=posts)
 
@@ -378,7 +380,7 @@ def update(id):
                 "UPDATE post SET title = ?, body = ? WHERE id = ?", (title, body, id)
             )
             db.commit()
-            return redirect(url_for("blog.index"))
+            return redirect(url_for("blog.output"))
 
     return render_template("blog/update.html", post=post)
 
