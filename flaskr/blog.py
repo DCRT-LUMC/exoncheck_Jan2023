@@ -2,38 +2,35 @@ from flask import Blueprint
 from flask import flash
 from flask import g
 from flask import redirect
-from flask import render_template
 from flask import request
 from flask import url_for
 from werkzeug.exceptions import abort
-
 from flaskr.auth import login_required
 from flaskr.db import get_db
 from flaskr.info import *
+from flask import render_template
 
 bp = Blueprint("blog", __name__)
 
 @bp.route("/")
 def welcome():
+    """Show the welcome page as default/root """
     return render_template("blog/welcome.html")
 
 
 @bp.route("/output")
 @login_required
 def output():
-    """Use fetchall() for: Show all the posts, most recent first.
-    But we will now just show the latest variant"""
+    """ Show all uploaded variants of the current user, most recent first"""
     db = get_db()
-
-    #check_author and post["author_id"] != g.user["id"]
 
     posts = db.execute(
         "SELECT p.id, title, created, author_id, username, "
-        # gene
+        # Show gene info
         "gene_symbol,"
         "ENSG_gene_id,"
 
-        # variant
+        # Show variant info
         "NC_variant,"
         "strand,"
         "hg38_variant,"
@@ -41,7 +38,7 @@ def output():
         "MANE_select_ENST_variant,"
         "consequence_variant,"
 
-        # exon
+        # Show exon info
         "exon_number,"
         "total_exons,"
         "NC_exon,"
@@ -53,11 +50,11 @@ def output():
         "MANE_select_ENST_exon,"
         "consequence_skipping,"
 
-        # domain
+        # Show domain info
         "uniprot_link,"
         "domain_info,"
 
-        # expression
+        # Show expression info
         "gtex_link,"
         "expression_eye,"
         "expression_brain,"
@@ -66,7 +63,7 @@ def output():
         "expression_blood,"
         "expression_transformed_lymphocytes,"
 
-        # lovd
+        # Show LOVD info
         "no_exact_lovd_matches,"
         "no_partial_lovd_matches,"
         "exact_lovd_match_link,"
@@ -82,27 +79,27 @@ def output():
         "partial_lovd_match9,"
         "partial_lovd_match10,"
 
-        # identifiers
+        # Show OMIM id
         "omim_id,"
 
-        # links
+        # Show links
         "omim_link,"
         "gnomAD_link,"
         "decipher_link,"
         "clinvar_link"
 
+        # Show uploads of the current user sorted by recent uploads first
         " FROM post p JOIN user u ON p.author_id = u.id"
-        # " ORDER BY created DESC"
-        " WHERE u.id = ?", (g.user["id"],),
+        " WHERE u.id = ? ORDER BY created DESC", (g.user["id"],),
     ).fetchall()
     return render_template("blog/output.html", posts=posts)
 
 
 def get_post(id, check_author=True):
-    """Get a post and its author by id.
-
-    Checks that the id exists and optionally that the current user is
-    the author.
+    """
+    Get an uploaded variant and its author by id
+    Checks that the id exists
+    Checks if current user is the author
 
     :param id: id of post to get
     :param check_author: require the current user to be the author
@@ -133,7 +130,7 @@ def get_post(id, check_author=True):
 @bp.route("/create", methods=("GET", "POST"))
 @login_required
 def create():
-    """Create a new post for the current user."""
+    """Upload new variant by the current user."""
     if request.method == "POST":
         title = request.form["title"]
         error_title = None
