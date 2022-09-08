@@ -10,16 +10,12 @@ from flask import session
 from flask import url_for
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
-
 from flaskr.db import get_db
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
-#test new comment
-
 
 def login_required(view):
     """View decorator that redirects anonymous users to the login page."""
-
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
