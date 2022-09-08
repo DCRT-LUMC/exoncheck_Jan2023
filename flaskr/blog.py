@@ -189,16 +189,7 @@ def create():
 
                 # to do
                 MANE_select_ENST_exon = 'to_do'
-                # #partial_lovd_match1 = 'to_do'
-                # partial_lovd_match2 = 'to_do'
-                # partial_lovd_match3 = 'to_do'
-                # partial_lovd_match4 = 'to_do'
-                # partial_lovd_match5 = 'to_do'
-                # partial_lovd_match6 = 'to_do'
-                # partial_lovd_match7 = 'to_do'
-                # partial_lovd_match8 = 'to_do'
-                # partial_lovd_match9 = 'to_do'
-                # partial_lovd_match10 = 'to_do'
+
 
                 db = get_db()
                 db.execute(

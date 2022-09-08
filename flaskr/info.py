@@ -176,13 +176,17 @@ def exploit_variant_validator(MANE_select_NM_variant):
                 genomic_start = str(exon["genomic_start"])
                 exon_length = int(exon["cigar"][:-1])
                 NC_exon_NC_format = latest_reference_sequence + ':g.' + genomic_start + '_' + genomic_end + 'del'
+                if exon_number == '1' or exon_number == total_exons:
+                    exon_length = exon_length - int(data2["transcripts"][0]["coding_start"]) + 1
+                elif exon_number == total_exons:
+                    exon_length = exon_length - int(data2["transcripts"][0]["coding_end"]) + 1
     except:
         exon_length = 'N/A'
         NC_exon_NC_format = 'N/A'
 
     # looking at amino acids instead of nucleotides
     try:
-        exon_length /= 3
+        exon_length /= 3.0
     except:
         exon_length = 0
 
@@ -199,7 +203,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     try:
         percentage_length = round(exon_length / total_protein_length * 100, 2)
 
-        exon_length = round(exon_length)
+        exon_length = str(round(exon_length, 2))
     except:
         percentage_length = 'N/A'
         exon_length = 'N/A'
