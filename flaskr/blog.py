@@ -143,19 +143,10 @@ def create():
 
         # Check if input is in correct HGVS format using VariantValidator
         else:
-            error_hgvs_format = None
-            if check_for_hgvs_format(title) != "":
-                error_hgvs_format = f"Your variant ({title}) is not conform HGVS format. " \
-                                    f"See http://varnomen.hgvs.org/recommendations/general/ for a quick overview. " \
-                                    f"Example input: NM_001029896.2:c.749_751del. " \
-                                    f"Please try again." \
+            syntax_message = check_for_hgvs_format(title)
 
-                                    # Optionally: show error message
-                                    # "(Feedback message =\t" + check_for_hgvs_format(title) + ")"
-
-            if error_hgvs_format is not None:
-                flash(error_hgvs_format)
-
+            if syntax_message != '':
+                flash(syntax_message)
             else:
                 # Get MANE select in NM format
                 MANE_select_NM_variant, \

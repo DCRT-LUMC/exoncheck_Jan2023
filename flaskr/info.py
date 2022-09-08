@@ -5,11 +5,40 @@ import xmltodict
 import urllib.parse
 import urllib.request
 
+
+
 def check_for_hgvs_format(uploaded_variant):
-    req = requests.get(f'https://rest.variantvalidator.org/VariantValidator/tools/hgvs2reference/{uploaded_variant}?content-type=application%2Fjson')
+    req = requests.get(f'https://api.lovd.nl/v1/checkHGVS/{uploaded_variant}')
     data = json.loads(req.content)
-    hgvs_status = data['error']
-    return hgvs_status
+
+    syntax_message = ''
+
+    try:
+        warnings = data['data'][uploaded_variant]["warnings"]
+        errors = data['data'][uploaded_variant]["errors"]
+        suggested_corrections = data['data'][uploaded_variant]["data"]["suggested_correction"]
+    except:
+        warnings = []
+        errors = []
+        suggested_corrections = []
+
+    if warnings != []:
+        syntax_message += f'Warning(s) = '
+        for warning in warnings.values():
+            syntax_message += warning + ' '
+
+    if errors != []:
+        syntax_message += f'Error(s) = '
+        for error in errors.values():
+            syntax_message += error + ' '
+
+    if suggested_corrections != []:
+        try:
+            syntax_message += f'Suggested correction = {suggested_corrections["value"]} (confidence: {suggested_corrections["confidence"]})'
+        except:
+            syntax_message += 'No suggested corrections available'
+
+    return syntax_message
 
 def get_MANE_select_identifiers(uploaded_variant):
     MANE_select_NM_variant = 'N/A'
