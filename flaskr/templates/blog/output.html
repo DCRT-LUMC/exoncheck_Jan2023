@@ -33,7 +33,7 @@
 
           <h3>EXON TO BE SKIPPED</h3>
           <pre>---GENOMIC---</pre>
-          <pre>Exon number:               {{ post['exon_number'] }} / {{ post['total_exons'] }}</pre>
+          <pre>Exon number:               {{ post['exon_number'] }} / {{ post['total_exons'] }} {{post['exon_number_interpretation']}}</pre>
           <pre>Hg38 description:          {{ post['NC_exon'] }}</pre>
           <pre>Exon length:               {{ post['exon_length'] }} / {{ post['total_protein_length'] }} ({{ post['percentage_length'] }}%)</pre>
           <pre>Frame:                     {{ post['frame'] }}</pre>

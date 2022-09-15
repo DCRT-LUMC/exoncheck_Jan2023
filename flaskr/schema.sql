@@ -31,6 +31,7 @@ CREATE TABLE post (
   --exon
   exon_number TEXT,
   total_exons TEXT,
+  exon_number_interpretation TEXT,
   NC_exon TEXT,
   exon_length TEXT,
   total_protein_length TEXT,

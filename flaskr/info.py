@@ -169,6 +169,8 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         total_protein_length = 'N/A'
 
+    exon_number_interpretation = ''
+
     try:
         for exon in data2["transcripts"][0]["genomic_spans"][latest_reference_sequence]["exon_structure"]:
             if str(exon["exon_number"]) == exon_number:
@@ -180,6 +182,11 @@ def exploit_variant_validator(MANE_select_NM_variant):
                     exon_length = exon_length - int(data2["transcripts"][0]["coding_start"]) + 1
                 elif exon_number == total_exons:
                     exon_length = exon_length - int(data2["transcripts"][0]["coding_end"]) + 1
+
+                if exon_number == '1':
+                    exon_number_interpretation = "First exon can't be skipped"
+                if exon_number == total_exons:
+                    exon_number_interpretation = "Last exon can't be skipped"
     except:
         exon_length = 'N/A'
         NC_exon_NC_format = 'N/A'
@@ -233,7 +240,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
         ENSG_gene, \
         omim_id, \
         gene_symbol, \
-        consequence_variant, exon_number, total_exons, NC_exon_NC_format, \
+        consequence_variant, exon_number, total_exons, exon_number_interpretation, NC_exon_NC_format, \
         exon_length, total_protein_length, percentage_length, frame, consequence_skipping, MANE_select_NM_exon
 
 def get_positions_for_lovd(hg38_genomic_description):

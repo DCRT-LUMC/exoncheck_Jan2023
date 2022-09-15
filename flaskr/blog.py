@@ -41,6 +41,7 @@ def output():
         # Show exon info
         "exon_number,"
         "total_exons,"
+        "exon_number_interpretation,"
         "NC_exon,"
         "exon_length,"
         "total_protein_length,"
@@ -161,6 +162,7 @@ def create():
                 consequence_variant, \
                 exon_number, \
                 total_exons, \
+                exon_number_interpretation, \
                 NC_exon, \
                 exon_length, \
                 total_protein_length, \
@@ -213,6 +215,7 @@ def create():
                     # exon
                     "exon_number,"
                     "total_exons,"
+                    "exon_number_interpretation,"
                     "NC_exon,"
                     "exon_length,"
                     "total_protein_length,"
@@ -259,7 +262,7 @@ def create():
                     "gnomAD_link,"
                     "decipher_link,"
                     "clinvar_link)"
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
@@ -284,6 +287,7 @@ def create():
                     # exon
                     exon_number,
                     total_exons,
+                    exon_number_interpretation,
                     NC_exon,
                     exon_length,
                     total_protein_length,
