@@ -377,12 +377,15 @@ def get_lovd_info(hg38_genomic_description, gene_symbol):
 
 def get_uniprot_info(ENSG_gene_id):
     # get uniprot id
-    req = requests.get(f'https://mygene.info/v3/gene/{ENSG_gene_id}?fields=uniprot')
-    data = json.loads(req.content)
-    uniprot_id = data['uniprot']['Swiss-Prot']
-
-    # get uniprot gene link
-    uniprot_link = f'https://www.uniprot.org/uniprotkb/{uniprot_id}/entry'
+    try:
+        req = requests.get(f'https://mygene.info/v3/gene/{ENSG_gene_id}?fields=uniprot')
+        data = json.loads(req.content)
+        uniprot_id = data['uniprot']['Swiss-Prot']
+        # get uniprot gene link
+        uniprot_link = f'https://www.uniprot.org/uniprotkb/{uniprot_id}/entry'
+    except:
+        uniprot_id = 'N/A'
+        uniprot_link = 'N/A'
 
     # get domain info
     file = urllib.request.urlopen(f'https://rest.uniprot.org/uniprotkb/{uniprot_id}.xml')
