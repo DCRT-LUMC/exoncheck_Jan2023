@@ -35,15 +35,18 @@ def check_for_hgvs_format(uploaded_variant):
         for warning in warnings.values():
             syntax_message += warning + ' '
 
-    #
+    # Add error messages to the syntax message if any error exists
     if errors != []:
         syntax_message += f'Error(s) = '
         for error in errors.values():
             syntax_message += error + ' '
 
+    # Add suggested correction to the syntex message if any suggestion exists
+    # A new try-except statement is used since suggested correction are not provided for all wrong syntaxes
     if suggested_corrections != []:
         try:
-            syntax_message += f'Suggested correction = {suggested_corrections["value"]} (confidence: {suggested_corrections["confidence"]})'
+            syntax_message += f'Suggested correction = {suggested_corrections["value"]} (confidence: ' \
+                              f'{suggested_corrections["confidence"]})'
         except:
             syntax_message += 'No suggested corrections available'
 
