@@ -5,8 +5,6 @@ import xmltodict
 import urllib.parse
 import urllib.request
 
-
-
 def check_for_hgvs_format(uploaded_variant):
     req = requests.get(f'https://api.lovd.nl/v1/checkHGVS/{uploaded_variant}')
     data = json.loads(req.content)
@@ -40,6 +38,18 @@ def check_for_hgvs_format(uploaded_variant):
 
     return syntax_message
 
+def check_for_match_variant_and_transcript(uploaded_variant):
+    req = requests.get(f'https://reg.genome.network/allele?hgvs={uploaded_variant}')
+    data = json.loads(req.content)
+
+    try:
+        match_message = data['message']
+    except:
+        match_message = ''
+
+    return match_message
+
+
 def get_MANE_select_identifiers(uploaded_variant):
     MANE_select_NM_variant = 'N/A'
     MANE_select_ENST_variant = 'N/A'
@@ -47,22 +57,27 @@ def get_MANE_select_identifiers(uploaded_variant):
     req = requests.get(f'https://reg.genome.network/allele?hgvs={uploaded_variant}')
     data = json.loads(req.content)
 
-    for transcript in data['transcriptAlleles']:
-        if 'MANE' in transcript:
-            MANE_select_NM_variant = transcript['MANE']['nucleotide']['RefSeq']['hgvs']
-            MANE_select_ENST_variant = transcript['MANE']['nucleotide']['Ensembl']['hgvs']
-            break  # ClinGen provides the (same) MANE select twice, only one is needed
+    try:
+        for transcript in data['transcriptAlleles']:
+            if 'MANE' in transcript:
+                MANE_select_NM_variant = transcript['MANE']['nucleotide']['RefSeq']['hgvs']
+                MANE_select_ENST_variant = transcript['MANE']['nucleotide']['Ensembl']['hgvs']
+                break  # ClinGen provides the (same) MANE select twice, only one is needed
+    except:
+        MANE_select_NM_variant = 'N/A'
+        MANE_select_ENST_variant = 'N/A'
 
     return MANE_select_NM_variant, MANE_select_ENST_variant
 
 def get_strand(ENSG_gene_id):
-    req = requests.get(f'https://rest.ensembl.org/lookup/id/{ENSG_gene_id}?content-type=application/json')
-    data = json.loads(req.content)
-    if data['strand'] == -1:
-        return 'Reverse'
-    elif data['strand'] == 1:
-        return 'Forward'
-    else:
+    try:
+        req = requests.get(f'https://rest.ensembl.org/lookup/id/{ENSG_gene_id}?content-type=application/json')
+        data = json.loads(req.content)
+        if data['strand'] == -1:
+            return 'Reverse'
+        elif data['strand'] == 1:
+            return 'Forward'
+    except:
         return 'N/A'
 
 def exploit_variant_validator(MANE_select_NM_variant):
@@ -298,12 +313,16 @@ def get_lovd_info(hg38_genomic_description, gene_symbol):
 
 
     # Check if variant position PARTIALLY matches other variants
-    req = requests.get(
-        f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene_symbol}?search_position=g.{hg38_coordinates_for_lovd}&position_match=partial&format=application/json')
-
-    data = json.loads(req.content)
-
     partial_matching_lovd_variants = ['', '', '', '', '', '', '', '', '', '']
+
+    try:
+        req = requests.get(
+            f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene_symbol}?search_position=g.{hg38_coordinates_for_lovd}&position_match=partial&format=application/json')
+
+        data = json.loads(req.content)
+    except:
+        data = False
+
 
     if data:
         for variant in data:

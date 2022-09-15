@@ -142,12 +142,19 @@ def create():
         if error_title is not None:
             flash(error_title)
 
-        # Check if input is in correct HGVS format using VariantValidator
+        # Check if input is in correct HGVS format using VariantValidator, syntax only
         else:
             syntax_message = check_for_hgvs_format(title)
 
             if syntax_message != '':
                 flash(syntax_message)
+
+            # Check if nucleotides and positions of input correspond to the submitted transcript
+            match_message = check_for_match_variant_and_transcript(title)
+
+            if match_message != '':
+                flash(match_message)
+
             else:
                 # Get MANE select in NM format
                 MANE_select_NM_variant, \
