@@ -73,13 +73,19 @@ def check_for_match_variant_and_transcript(uploaded_variant):
     return match_message
 
 def get_MANE_select_identifiers(uploaded_variant):
+    """
+    This function selects the MANE select transcript of the uploaded variant by employing VariantValidator
+    (credits: TO DO)
+    Input: uploaded variant (protein coding RNA), reference can be the MANE select as any other transcript
+    Output: the variant based on the MANE select transcript in NM- and ENST-based format
+    """
+
     MANE_select_NM_variant = 'N/A'
     MANE_select_ENST_variant = 'N/A'
 
-    req = requests.get(f'https://reg.genome.network/allele?hgvs={uploaded_variant}')
-    data = json.loads(req.content)
-
     try:
+        req = requests.get(f'https://reg.genome.network/allele?hgvs={uploaded_variant}')
+        data = json.loads(req.content)
         for transcript in data['transcriptAlleles']:
             if 'MANE' in transcript:
                 MANE_select_NM_variant = transcript['MANE']['nucleotide']['RefSeq']['hgvs']
