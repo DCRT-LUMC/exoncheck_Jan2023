@@ -8,11 +8,16 @@ def check_for_hgvs_format(uploaded_variant):
     """
     This function checks the syntax of the uploaded variant by making use of checkHGVS API from LOVD (credits: TO DO)
     Input: uploaded variant (protein coding RNA), reference can be the MANE select as any other transcript
-    Output: When the original syntax is wrong, this function returns a suggested syntax correcting with its
-    corresponding confidence value. When the original syntax is rong, it returns an empty string
+    Output: When the original syntax is wrong:
+        This function returns a string containing all warnings and error messages, the suggested syntax correction if
+        any with its corresponding confidence value.
+    When the original syntax is correct:
+        This function returns an empty string
     """
+
     syntax_message = ''
 
+    # Get syntax data from checkHGVS
     try:
         req = requests.get(f'https://api.lovd.nl/v1/checkHGVS/{uploaded_variant}')
         data = json.loads(req.content)
@@ -24,11 +29,13 @@ def check_for_hgvs_format(uploaded_variant):
         errors = []
         suggested_corrections = []
 
+    # Merge all warnings in one syntax message if any warning exists
     if warnings != []:
         syntax_message += f'Warning(s) = '
         for warning in warnings.values():
             syntax_message += warning + ' '
 
+    #
     if errors != []:
         syntax_message += f'Error(s) = '
         for error in errors.values():
