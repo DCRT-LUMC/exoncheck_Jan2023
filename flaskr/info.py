@@ -53,16 +53,24 @@ def check_for_hgvs_format(uploaded_variant):
     return syntax_message
 
 def check_for_match_variant_and_transcript(uploaded_variant):
-    req = requests.get(f'https://reg.genome.network/allele?hgvs={uploaded_variant}')
-    data = json.loads(req.content)
+    """
+    This function checks if the uploaded variant does make sense on a biological level by employing VariantValidator
+    (credits: TO DO)
+    Input: uploaded variant (protein coding RNA), reference can be the MANE select as any other transcript
+    Output: When the variant does not make sense on a biological level:
+        This function returns a string with the error message
+    When the variant does make sense on a biological level:
+        This function returns an empty string
+    """
 
     try:
+        req = requests.get(f'https://reg.genome.network/allele?hgvs={uploaded_variant}')
+        data = json.loads(req.content)
         match_message = data['message']
     except:
         match_message = ''
 
     return match_message
-
 
 def get_MANE_select_identifiers(uploaded_variant):
     MANE_select_NM_variant = 'N/A'
