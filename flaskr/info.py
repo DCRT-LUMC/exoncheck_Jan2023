@@ -1,4 +1,3 @@
-from flask import Flask, render_template
 import requests
 import json
 import xmltodict
@@ -6,12 +5,17 @@ import urllib.parse
 import urllib.request
 
 def check_for_hgvs_format(uploaded_variant):
-    req = requests.get(f'https://api.lovd.nl/v1/checkHGVS/{uploaded_variant}')
-    data = json.loads(req.content)
-
+    """
+    This function checks the syntax of the uploaded variant by making use of checkHGVS API from LOVD (credits: TO DO)
+    Input: uploaded variant (protein coding RNA), reference can be the MANE select as any other transcript
+    Output: When the original syntax is wrong, this function returns a suggested syntax correcting with its
+    corresponding confidence value. When the original syntax is rong, it returns an empty string
+    """
     syntax_message = ''
 
     try:
+        req = requests.get(f'https://api.lovd.nl/v1/checkHGVS/{uploaded_variant}')
+        data = json.loads(req.content)
         warnings = data['data'][uploaded_variant]["warnings"]
         errors = data['data'][uploaded_variant]["errors"]
         suggested_corrections = data['data'][uploaded_variant]["data"]["suggested_correction"]
