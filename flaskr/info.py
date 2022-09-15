@@ -370,7 +370,7 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
 
     gtex_data = get_gtexportal_json(ENSG_gene_id + '.' + str(ENSG_version))
 
-    expression_eye = 'to_do'
+    expression_eye = 'https://www.eye-transcriptome.com/search_latest.php'
     expression_brain = 'no'
     expression_fibroblasts = 'no'
     expression_tibial_nerve = 'no'
