@@ -3,6 +3,7 @@ import json
 import xmltodict
 import urllib.parse
 import urllib.request
+import pandas as pd
 
 
 def check_for_hgvs_format(uploaded_variant):
@@ -419,14 +420,14 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
            expression_transformed_lymphocytes
 
 
-def get_positions_for_lovd(hg38_genomic_description):
+def get_positions_for_lovd(NC_variant):
     # This function converts the hg38 genomic description (i.e. NC_000023.11:g.49075445_49075447del) to a format
     # that is accepted by LOVD (i.e. g.49075445_49075447). Note that chromosome information is not needed since
     # LOVD already known to which chromosome the gene belongs
     # Input: hg38 genomic description
     # Output: LOVD conform hg38 description
     try:
-        hg38_coordinates = hg38_genomic_description.split('.')[-1].split('_')
+        hg38_coordinates = NC_variant.split('.')[-1].split('_')
 
         if len(hg38_coordinates) == 1:
             hg38_coordinates_for_gene_based_lovd = 'g.'.join([i for i in hg38_coordinates[0] if i.isdigit()])
@@ -440,12 +441,26 @@ def get_positions_for_lovd(hg38_genomic_description):
     return hg38_coordinates_for_gene_based_lovd
 
 
-def get_lovd_info(hg38_genomic_description, gene_symbol):
+def get_lovd_info(hg38_variant, NC_variant, gene_symbol):
+    # Check general LOVD in which genes there are exact hits with the variant
+    # First get the coordinates in the right format
+    chromosome_of_variant = hg38_variant.split('-')[0]
+    hg38_coordinates_for_general_lovd = chromosome_of_variant + ':' + get_positions_for_lovd(NC_variant)
 
+    try:
+        genes_containing_exact_hits = []
+        url = f'http://lovd.nl/search.php?build=hg19&position={hg38_coordinates_for_general_lovd}'
+        url_data = pd.read_table(url, sep='\t')
 
-    # http://lovd.nl/search.php?build=hg19&position=chr13:32936733
+        for gene in url_data['gene_id']:
+            genes_containing_exact_hits.append(gene)
 
-    hg38_coordinates_for_gene_based_lovd = get_positions_for_lovd(hg38_genomic_description)
+        # Remove duplicates if any
+        genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
+    except:
+        genes_containing_exact_hits = 'N/A'
+
+    hg38_coordinates_for_gene_based_lovd = get_positions_for_lovd(NC_variant)
     no_partial_lovd_matches = 0
     no_exact_lovd_matches = 0
 
@@ -506,6 +521,6 @@ def get_lovd_info(hg38_genomic_description, gene_symbol):
     partial_lovd_match5, partial_lovd_match6, partial_lovd_match7, partial_lovd_match8, \
     partial_lovd_match9, partial_lovd_match10 = partial_matching_lovd_variants
 
-    return lovd_gene_link, no_exact_lovd_matches, exact_lovd_match_link, no_partial_lovd_matches, partial_lovd_match1, partial_lovd_match2, partial_lovd_match3, partial_lovd_match4, \
+    return lovd_gene_link, genes_containing_exact_hits, no_exact_lovd_matches, exact_lovd_match_link, no_partial_lovd_matches, partial_lovd_match1, partial_lovd_match2, partial_lovd_match3, partial_lovd_match4, \
            partial_lovd_match5, partial_lovd_match6, partial_lovd_match7, partial_lovd_match8, \
            partial_lovd_match9, partial_lovd_match10

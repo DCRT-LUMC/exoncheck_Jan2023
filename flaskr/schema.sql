@@ -59,6 +59,7 @@ CREATE TABLE post (
   no_partial_lovd_matches TEXT,
   exact_lovd_match_link TEXT,
   lovd_link TEXT,
+  genes_containing_exact_hits TEXT,
   partial_lovd_match1 TEXT,
   partial_lovd_match2 TEXT,
   partial_lovd_match3 TEXT,
