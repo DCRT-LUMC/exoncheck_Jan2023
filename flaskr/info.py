@@ -441,12 +441,19 @@ def get_positions_for_lovd(NC_variant):
     return hg38_coordinates_for_gene_based_lovd
 
 
-def get_lovd_info(hg38_variant, NC_variant, gene_symbol):
-    # Check general LOVD in which genes there are exact hits with the variant
+def get_lovd_info(hg38_variant, NC_variant):
+    # This function checks if there are exact matches available in the LOVD database (TO DO: add credits)
+    # Currently it's only checking the hg19 based database, this should be elaborated with hg18 and hg17
+    # Input: the variant in hg38 format, the variant with NC as reference
+    # Output: A string containing the number of hits per found gene and the corresponding link
+    # TO DO: IMPROVE THIS OUTPUT FORMAT, THINK OF A WAY TO CONVENIENTLY STORE THIS IN A SQL FORMAT
+    
     # First get the coordinates in the right format
     chromosome_of_variant = hg38_variant.split('-')[0]
-    hg38_coordinates_for_general_lovd = chromosome_of_variant + ':' + get_positions_for_lovd(NC_variant)
+    hg38_coordinates_for_gene_lovd = get_positions_for_lovd(NC_variant)
+    hg38_coordinates_for_general_lovd = chromosome_of_variant + ':' + hg38_coordinates_for_gene_lovd
 
+    # Find in which genes exact matches are found
     try:
         genes_containing_exact_hits = []
         url = f'http://lovd.nl/search.php?build=hg19&position={hg38_coordinates_for_general_lovd}'
@@ -457,70 +464,35 @@ def get_lovd_info(hg38_variant, NC_variant, gene_symbol):
 
         # Remove duplicates if any
         genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
+
     except:
         genes_containing_exact_hits = 'N/A'
 
-    hg38_coordinates_for_gene_based_lovd = get_positions_for_lovd(NC_variant)
-    no_partial_lovd_matches = 0
-    no_exact_lovd_matches = 0
+    # Loop over the genes containing hits
+    if genes_containing_exact_hits != 'N/A':
+        output_exact_hits = ''
 
-    # Check if gene symbol is available in the LOVD database
-    try:
-        req_gene = requests.get(
-            f'https://databases.lovd.nl/shared/api/rest.php/genes/{gene_symbol}')
-        lovd_gene_link = f'https://databases.lovd.nl/shared/variants/{gene_symbol}/unique'
-    except:
-        lovd_gene_link = 'Gene is not available in LOVD'
+        for gene in genes_containing_exact_hits:
+            # Start counting from zero again when querying a new gene
+            number_exact_lovd_matches = 0
 
-    # Check if variant position EXACTLY matches other variants
-    req_exact = requests.get(
-        f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene_symbol}?search_position={hg38_coordinates_for_gene_based_lovd}&format=application/json')
-
-    try:
-        data_exact = json.loads(req_exact.content)
-
-        exact_matching_lovd_variants = []
-        exact_lovd_match_link = 'N/A'
-
-        if data_exact:
-            for variant in data_exact:
-                exact_matching_lovd_variants.append(variant['id'])
-                no_exact_lovd_matches += 1
-                lovd_DBID = variant["Variant/DBID"]
-                exact_lovd_match_link = f'https://databases.lovd.nl/shared/view/{gene_symbol}?search_VariantOnGenome%2FDBID=%22{lovd_DBID}%22'  # Maybe move to outside of the loop
-        else:
-            exact_matching_lovd_variants.append('N/A')
-    except:
-        exact_lovd_match_link = 'N/A'
-        exact_lovd_match_link = 'N/A'
-        no_exact_lovd_matches = 0
-
-    # Check if variant position PARTIALLY matches other variants
-    partial_matching_lovd_variants = ['', '', '', '', '', '', '', '', '', '']
-
-    try:
-        req = requests.get(
-            f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene_symbol}?search_position=g.{hg38_coordinates_for_gene_based_lovd}&position_match=partial&format=application/json')
-
-        data = json.loads(req.content)
-    except:
-        data = False
-
-    if data:
-        for variant in data:
-            # 'https://databases.lovd.nl/shared/variants/' + lovd_id
+            # Check if variant position EXACTLY matches other variants
             try:
-                partial_matching_lovd_variants[no_partial_lovd_matches] = variant['id']
-                no_partial_lovd_matches += 1
+                req_exact = requests.get(
+                    f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene}?'
+                    f'search_position={hg38_coordinates_for_gene_lovd}&format=application/json')
+                data_exact = json.loads(req_exact.content)
+
+                for variant in data_exact:
+                    number_exact_lovd_matches += 1
+                    lovd_DBID = variant["Variant/DBID"]
+                    exact_lovd_match_link = f'https://databases.lovd.nl/shared/view/{gene}' \
+                                            f'?search_VariantOnGenome%2FDBID=%22{lovd_DBID}%22'
             except:
-                continue
-    if not partial_matching_lovd_variants:
-        partial_matching_lovd_variants.append('N/A')
+                exact_lovd_match_link = 'N/A'
 
-    partial_lovd_match1, partial_lovd_match2, partial_lovd_match3, partial_lovd_match4, \
-    partial_lovd_match5, partial_lovd_match6, partial_lovd_match7, partial_lovd_match8, \
-    partial_lovd_match9, partial_lovd_match10 = partial_matching_lovd_variants
+            output_exact_hits += gene + ':' + str(number_exact_lovd_matches) + ', link:' + exact_lovd_match_link + ','
+    else:
+        output_exact_hits = 'N/A'
 
-    return lovd_gene_link, genes_containing_exact_hits, no_exact_lovd_matches, exact_lovd_match_link, no_partial_lovd_matches, partial_lovd_match1, partial_lovd_match2, partial_lovd_match3, partial_lovd_match4, \
-           partial_lovd_match5, partial_lovd_match6, partial_lovd_match7, partial_lovd_match8, \
-           partial_lovd_match9, partial_lovd_match10
+    return output_exact_hits

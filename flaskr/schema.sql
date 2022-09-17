@@ -55,21 +55,7 @@ CREATE TABLE post (
   expression_transformed_lymphocytes TEXT,
 
   --lovd
-  no_exact_lovd_matches TEXT,
-  no_partial_lovd_matches TEXT,
-  exact_lovd_match_link TEXT,
-  lovd_link TEXT,
-  genes_containing_exact_hits TEXT,
-  partial_lovd_match1 TEXT,
-  partial_lovd_match2 TEXT,
-  partial_lovd_match3 TEXT,
-  partial_lovd_match4 TEXT,
-  partial_lovd_match5 TEXT,
-  partial_lovd_match6 TEXT,
-  partial_lovd_match7 TEXT,
-  partial_lovd_match8 TEXT,
-  partial_lovd_match9 TEXT,
-  partial_lovd_match10 TEXT,
+  lovd_output TEXT,
 
     --identifiers
   omim_id TEXT,

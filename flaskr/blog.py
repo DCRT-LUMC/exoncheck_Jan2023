@@ -65,21 +65,7 @@ def output():
         "expression_transformed_lymphocytes,"
 
         # Show LOVD info
-        "no_exact_lovd_matches,"
-        "no_partial_lovd_matches,"
-        "exact_lovd_match_link,"
-        "lovd_link,"
-        "genes_containing_exact_hits,"
-        "partial_lovd_match1,"
-        "partial_lovd_match2,"
-        "partial_lovd_match3,"
-        "partial_lovd_match4,"
-        "partial_lovd_match5,"
-        "partial_lovd_match6,"
-        "partial_lovd_match7,"
-        "partial_lovd_match8,"
-        "partial_lovd_match9,"
-        "partial_lovd_match10,"
+        "lovd_output,"
 
         # Show OMIM id
         "omim_id,"
@@ -180,9 +166,7 @@ def create():
                 MANE_select_NM_exon = exploit_variant_validator(MANE_select_NM_variant)
 
                 # Get LOVD information
-                lovd_link, genes_containing_exact_hits, no_exact_lovd_matches, exact_lovd_match_link, no_partial_lovd_matches, partial_lovd_match1, partial_lovd_match2, partial_lovd_match3, partial_lovd_match4, \
-                partial_lovd_match5, partial_lovd_match6, partial_lovd_match7, partial_lovd_match8, \
-                partial_lovd_match9, partial_lovd_match10 = get_lovd_info(hg38_variant, NC_variant, gene_symbol)
+                lovd_output = get_lovd_info(hg38_variant, NC_variant)
 
                 # Get strand
                 strand = get_strand(ENSG_gene_id)
@@ -247,21 +231,7 @@ def create():
                     "expression_transformed_lymphocytes,"
 
                     # lovd
-                    "no_exact_lovd_matches,"
-                    "no_partial_lovd_matches,"
-                    "exact_lovd_match_link,"
-                    "lovd_link,"
-                    "genes_containing_exact_hits,"
-                    "partial_lovd_match1,"
-                    "partial_lovd_match2,"
-                    "partial_lovd_match3,"
-                    "partial_lovd_match4,"
-                    "partial_lovd_match5,"
-                    "partial_lovd_match6,"
-                    "partial_lovd_match7,"
-                    "partial_lovd_match8,"
-                    "partial_lovd_match9,"
-                    "partial_lovd_match10,"
+                    "lovd_output,"
 
                     # identifiers
                     "omim_id,"
@@ -271,11 +241,10 @@ def create():
                     "gnomAD_link,"
                     "decipher_link,"
                     "clinvar_link)"
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?,"
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
-                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
-                    "?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "?, ?, ?, ?, ?, ?, ?, ?)",
 
                     (# user
                     title,
@@ -320,21 +289,7 @@ def create():
                     expression_transformed_lymphocytes,
 
                     # lovd
-                    no_exact_lovd_matches,
-                    no_partial_lovd_matches,
-                    exact_lovd_match_link,
-                    lovd_link,
-                    genes_containing_exact_hits,
-                    partial_lovd_match1,
-                    partial_lovd_match2,
-                    partial_lovd_match3,
-                    partial_lovd_match4,
-                    partial_lovd_match5,
-                    partial_lovd_match6,
-                    partial_lovd_match7,
-                    partial_lovd_match8,
-                    partial_lovd_match9,
-                    partial_lovd_match10,
+                    lovd_output,
 
                     # identifiers
                     omim_id,
