@@ -420,23 +420,32 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
 
 
 def get_positions_for_lovd(hg38_genomic_description):
+    # This function converts the hg38 genomic description (i.e. NC_000023.11:g.49075445_49075447del) to a format
+    # that is accepted by LOVD (i.e. g.49075445_49075447). Note that chromosome information is not needed since
+    # LOVD already known to which chromosome the gene belongs
+    # Input: hg38 genomic description
+    # Output: LOVD conform hg38 description
     try:
         hg38_coordinates = hg38_genomic_description.split('.')[-1].split('_')
 
         if len(hg38_coordinates) == 1:
-            hg38_coordinates_for_lovd = ''.join([i for i in hg38_coordinates[0] if i.isdigit()])
+            hg38_coordinates_for_gene_based_lovd = 'g.'.join([i for i in hg38_coordinates[0] if i.isdigit()])
         else:
             coordinate1 = hg38_coordinates[0]
             coordinate2 = ''.join([i for i in hg38_coordinates[1] if i.isdigit()])
-            hg38_coordinates_for_lovd = coordinate1 + '_' + coordinate2
+            hg38_coordinates_for_gene_based_lovd = 'g.' + coordinate1 + '_' + coordinate2
     except:
-        hg38_coordinates_for_lovd = 'N/A'
+        hg38_coordinates_for_gene_based_lovd = 'N/A'
 
-    return hg38_coordinates_for_lovd
+    return hg38_coordinates_for_gene_based_lovd
 
 
 def get_lovd_info(hg38_genomic_description, gene_symbol):
-    hg38_coordinates_for_lovd = get_positions_for_lovd(hg38_genomic_description)
+
+
+    # http://lovd.nl/search.php?build=hg19&position=chr13:32936733
+
+    hg38_coordinates_for_gene_based_lovd = get_positions_for_lovd(hg38_genomic_description)
     no_partial_lovd_matches = 0
     no_exact_lovd_matches = 0
 
@@ -450,7 +459,7 @@ def get_lovd_info(hg38_genomic_description, gene_symbol):
 
     # Check if variant position EXACTLY matches other variants
     req_exact = requests.get(
-        f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene_symbol}?search_position=g.{hg38_coordinates_for_lovd}&format=application/json')
+        f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene_symbol}?search_position={hg38_coordinates_for_gene_based_lovd}&format=application/json')
 
     try:
         data_exact = json.loads(req_exact.content)
@@ -476,7 +485,7 @@ def get_lovd_info(hg38_genomic_description, gene_symbol):
 
     try:
         req = requests.get(
-            f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene_symbol}?search_position=g.{hg38_coordinates_for_lovd}&position_match=partial&format=application/json')
+            f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene_symbol}?search_position=g.{hg38_coordinates_for_gene_based_lovd}&position_match=partial&format=application/json')
 
         data = json.loads(req.content)
     except:
