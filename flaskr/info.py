@@ -95,6 +95,14 @@ def get_MANE_select_identifiers(uploaded_variant):
     return MANE_select_NM_variant, MANE_select_ENST_variant
 
 def get_strand(ENSG_gene_id):
+    """
+    This function retrieves the strand of the gene from Ensembl
+    Input: ENSG gene identifier
+    Output: Forward/Reverse/N/A
+    """
+
+
+
     try:
         req = requests.get(f'https://rest.ensembl.org/lookup/id/{ENSG_gene_id}?content-type=application/json')
         data = json.loads(req.content)
