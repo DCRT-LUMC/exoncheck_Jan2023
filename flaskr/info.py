@@ -80,9 +80,6 @@ def get_MANE_select_identifiers(uploaded_variant):
     Output: the variant based on the MANE select transcript in NM- and ENST-based format
     """
 
-    MANE_select_NM_variant = 'N/A'
-    MANE_select_ENST_variant = 'N/A'
-
     try:
         req = requests.get(f'https://reg.genome.network/allele?hgvs={uploaded_variant}')
         data = json.loads(req.content)
