@@ -176,7 +176,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
         latest_reference_sequence = ''
         for reference_sequence in reference_sequences:
             if reference_sequence.startswith('NC'):
-                if reference_sequence > latest_reference_sequence: # Based on ASCII
+                if reference_sequence > latest_reference_sequence:  # Based on ASCII
                     latest_reference_sequence = reference_sequence
     except:
         latest_reference_sequence = 'N/A'
@@ -204,7 +204,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     try:
         coding_end = data_gene2transcripts["transcripts"][0]["coding_end"]
         coding_start = data_gene2transcripts["transcripts"][0]["coding_start"]
-        total_protein_length = round((abs(coding_end - coding_start) + 1) / 3) # Note we have to do +1 because of the
+        total_protein_length = round((abs(coding_end - coding_start) + 1) / 3)  # Note we have to do +1 because of the
         # way of counting
     except:
         total_protein_length = 'N/A'
@@ -301,6 +301,124 @@ def exploit_variant_validator(MANE_select_NM_variant):
         MANE_select_NM_exon
 
 
+def get_uniprot_info(ENSG_gene_id):
+    # This function provides the UniProt link (TO DO: add credits) and general domain information
+    # (note: not exon to be skipped focused)
+    # Input: ENSG gene identifier (without version number)
+    # Output: UniProt gene link and exon corresponding domain information
+    try:
+        req = requests.get(f'https://mygene.info/v3/gene/{ENSG_gene_id}?fields=uniprot')
+        data = json.loads(req.content)
+        uniprot_id = data['uniprot']['Swiss-Prot']
+        # Get UniProt gene link
+        uniprot_link = f'https://www.uniprot.org/uniprotkb/{uniprot_id}/entry'
+    except:
+        uniprot_id = 'N/A'
+        uniprot_link = 'N/A'
+
+    # Get general domain info
+    try:
+        file = urllib.request.urlopen(f'https://rest.uniprot.org/uniprotkb/{uniprot_id}.xml')
+        data = file.read()
+        file.close()
+        # Convert xml to dict
+        uniprot_dict = xmltodict.parse(data)
+        # Retrieve domain information
+        domain_info = uniprot_dict['uniprot']['entry']['comment'][7]['text']['#text']
+    except:
+        domain_info = 'N/A'
+
+    return uniprot_link, domain_info
+
+
+def get_gtexportal_json(ENSG_gene_id):
+    # This function facilitates checking for which ENSG gene id version GTEx Portal data is available
+    # Input: ENSG gene id with version number
+    # Output: GTEx Portal data
+    url_gtexportal = f'https://gtexportal.org/rest/v1/expression/medianTranscriptExpression?datasetId=gtex_v8 \
+                        &gencodeId={ENSG_gene_id}&format=json'
+    r_gtex = requests.get(url_gtexportal)
+    gtex_data = json.loads(r_gtex.text)
+    return gtex_data
+
+
+def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
+    # This function checks in which (non-eye) tissues the MANE select transcript is expressed
+    # It uses the GTExPortal 'Bulk tissue gene expression' data (TO DO: add credits)
+    # Input: ENSG gene id with version number and the MANE select ENST variant
+    # Output: expression levels (yes/no) of non-eye tissues
+
+    # GTEx Portal has not always included the latest ENSG version. Therefore select data from the
+    # most recent ENSG version
+    ENSG_version = MANE_select_ENST_variant.split('.')[1]
+    ENST_without_version = MANE_select_ENST_variant.split('.')[0] + '.'
+
+    while get_gtexportal_json(ENSG_gene_id + '.' + str(ENSG_version))[
+        'medianTranscriptExpression'] == []:
+        ENSG_version -= 1
+
+    # IMPLEMENT THIS LATER IN THE TOOL
+    # TO DO: find a way to inform the user that not the latest ENSG version is used to employ GTEx Portal
+    # if ENSG_gene_id != ENSG_gene_id + '.' + str(ENSG_version):
+    #     print('\n***!WARNING!***\n' + ENSG_gene_id + '.' + str(
+    #         ENSG_version) + ' is utilized instead of ' + ENSG_gene_id +
+    #           ' to consult GTEx portal\n')
+
+    gtex_data = get_gtexportal_json(ENSG_gene_id + '.' + str(ENSG_version))
+
+    # Set expression level to 'no' unless expression is shown
+    expression_brain = 'no'
+    expression_fibroblasts = 'no'
+    expression_tibial_nerve = 'no'
+    expression_blood = 'no'
+    expression_transformed_lymphocytes = 'no'
+
+    # Check if the MANE select transcript is expressed in the following tissues
+    for transcript_in_tissue in gtex_data['medianTranscriptExpression']:
+        try:
+            if ENST_without_version in transcript_in_tissue['transcriptId'] and \
+                    'Brain' in transcript_in_tissue['tissueSiteDetailId'] and \
+                    transcript_in_tissue['median'] != 0:
+                expression_brain = 'yes'
+
+            if ENST_without_version in transcript_in_tissue['transcriptId'] and \
+                    transcript_in_tissue['tissueSiteDetailId'] == 'Cells_Cultured_fibroblasts' and \
+                    transcript_in_tissue['median'] != 0:
+                expression_fibroblasts = 'yes'
+
+            if ENST_without_version in transcript_in_tissue['transcriptId'] and \
+                    transcript_in_tissue['tissueSiteDetailId'] == 'Nerve_Tibial' and \
+                    transcript_in_tissue['median'] != 0:
+                expression_tibial_nerve = 'yes'
+
+            if ENST_without_version in transcript_in_tissue['transcriptId'] and \
+                    transcript_in_tissue['tissueSiteDetailId'] == 'Whole_Blood' and \
+                    transcript_in_tissue['median'] != 0:
+                expression_blood = 'yes'
+
+            if ENST_without_version in transcript_in_tissue['transcriptId'] and \
+                    transcript_in_tissue['tissueSiteDetailId'] == 'Cells_EBV-transformed_lymphocytes' and \
+                    transcript_in_tissue['median'] != 0:
+                expression_transformed_lymphocytes = 'yes'
+        # If data is not available, set expression levels to N/A
+        except:
+            expression_brain = 'N/A'
+            expression_fibroblasts = 'N/A'
+            expression_tibial_nerve = 'N/A'
+            expression_blood = 'N/A'
+            expression_transformed_lymphocytes = 'N/A'
+
+    # Change later!
+    expression_eye = 'https://www.eye-transcriptome.com/search_latest.php'
+
+    return expression_eye, \
+           expression_brain, \
+           expression_fibroblasts, \
+           expression_tibial_nerve, \
+           expression_blood, \
+           expression_transformed_lymphocytes
+
+
 def get_positions_for_lovd(hg38_genomic_description):
     try:
         hg38_coordinates = hg38_genomic_description.split('.')[-1].split('_')
@@ -382,104 +500,3 @@ def get_lovd_info(hg38_genomic_description, gene_symbol):
     return lovd_gene_link, no_exact_lovd_matches, exact_lovd_match_link, no_partial_lovd_matches, partial_lovd_match1, partial_lovd_match2, partial_lovd_match3, partial_lovd_match4, \
            partial_lovd_match5, partial_lovd_match6, partial_lovd_match7, partial_lovd_match8, \
            partial_lovd_match9, partial_lovd_match10
-
-
-def get_uniprot_info(ENSG_gene_id):
-    # get uniprot id
-    try:
-        req = requests.get(f'https://mygene.info/v3/gene/{ENSG_gene_id}?fields=uniprot')
-        data = json.loads(req.content)
-        uniprot_id = data['uniprot']['Swiss-Prot']
-        # get uniprot gene link
-        uniprot_link = f'https://www.uniprot.org/uniprotkb/{uniprot_id}/entry'
-    except:
-        uniprot_id = 'N/A'
-        uniprot_link = 'N/A'
-
-    # get domain info
-    try:
-        file = urllib.request.urlopen(f'https://rest.uniprot.org/uniprotkb/{uniprot_id}.xml')
-        data = file.read()
-        file.close()
-        uniprot_dict = xmltodict.parse(data)
-
-        domain_info = uniprot_dict['uniprot']['entry']['comment'][7]['text']['#text']
-    except:
-        domain_info = 'N/A'
-
-    return uniprot_link, domain_info
-
-
-def get_gtexportal_json(ENSG_gene_id):
-    url_gtexportal = f'https://gtexportal.org/rest/v1/expression/medianTranscriptExpression?datasetId=gtex_v8&gencodeId={ENSG_gene_id}&format=json'
-    r_gtex = requests.get(url_gtexportal)
-    gtex_data = json.loads(r_gtex.text)
-    return gtex_data
-
-
-def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
-    # This function checks in which tissues the gene is expressed
-    # It uses the GTExPortal 'Bulk tissue gene expression' data
-    # (i.e. from https://gtexportal.org/rest/v1/expression/geneExpression?datasetId=gtex_v8&gencodeId=ENSG00000196998.17&format=json)
-    # Need to be improved, wait for Marlen
-
-    ENSG_version = 0
-    ENST_without_version = MANE_select_ENST_variant.split('.')[0] + '.'
-
-    while get_gtexportal_json(ENSG_gene_id + '.' + str(ENSG_version))[
-        'medianTranscriptExpression'] == []:
-        ENSG_version += 1
-
-    # IMPLEMENT THIS LATER IN THE TOOL
-    # if ENSG_gene_id != ENSG_gene_id + '.' + str(ENSG_version):
-    #     print('\n***!WARNING!***\n' + ENSG_gene_id + '.' + str(
-    #         ENSG_version) + ' is utilized instead of ' + ENSG_gene_id +
-    #           ' to consult GTEx portal\n')
-
-    gtex_data = get_gtexportal_json(ENSG_gene_id + '.' + str(ENSG_version))
-
-    expression_eye = 'https://www.eye-transcriptome.com/search_latest.php'
-    expression_brain = 'no'
-    expression_fibroblasts = 'no'
-    expression_tibial_nerve = 'no'
-    expression_blood = 'no'
-    expression_transformed_lymphocytes = 'no'
-
-    for transcript_in_tissue in gtex_data['medianTranscriptExpression']:
-        try:
-            if ENST_without_version in transcript_in_tissue[
-                'transcriptId'] and 'Brain' in transcript_in_tissue[
-                'tissueSiteDetailId'] and transcript_in_tissue['median'] != 0:
-                expression_brain = 'yes'
-
-            if ENST_without_version in transcript_in_tissue['transcriptId'] and \
-                    transcript_in_tissue[
-                        'tissueSiteDetailId'] == 'Cells_Cultured_fibroblasts' and \
-                    transcript_in_tissue['median'] != 0:
-                expression_fibroblasts = 'yes'
-
-            if ENST_without_version in transcript_in_tissue['transcriptId'] and \
-                    transcript_in_tissue[
-                        'tissueSiteDetailId'] == 'Nerve_Tibial' and transcript_in_tissue[
-                'median'] != 0:
-                expression_tibial_nerve = 'yes'
-
-            if ENST_without_version in transcript_in_tissue['transcriptId'] and \
-                    transcript_in_tissue[
-                        'tissueSiteDetailId'] == 'Whole_Blood' and transcript_in_tissue[
-                'median'] != 0:
-                expression_blood = 'yes'
-
-            if ENST_without_version in transcript_in_tissue['transcriptId'] and \
-                    transcript_in_tissue[
-                        'tissueSiteDetailId'] == 'Cells_EBV-transformed_lymphocytes' and \
-                    transcript_in_tissue['median'] != 0:
-                expression_transformed_lymphocytes = 'yes'
-        except:
-            expression_brain = 'N/A'
-            expression_fibroblasts = 'N/A'
-            expression_tibial_nerve = 'N/A'
-            expression_blood = 'N/A'
-            expression_transformed_lymphocytes = 'N/A'
-
-    return expression_eye, expression_brain, expression_fibroblasts, expression_tibial_nerve, expression_blood, expression_transformed_lymphocytes
