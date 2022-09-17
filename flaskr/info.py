@@ -349,13 +349,13 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
     # Output: expression levels (yes/no) of non-eye tissues
 
     # GTEx Portal has not always included the latest ENSG version. Therefore select data from the
-    # most recent ENSG version
-    ENSG_version = MANE_select_ENST_variant.split('.')[1]
+    # ENSG version that is present
+    ENSG_version = 0
     ENST_without_version = MANE_select_ENST_variant.split('.')[0] + '.'
 
     while get_gtexportal_json(ENSG_gene_id + '.' + str(ENSG_version))[
         'medianTranscriptExpression'] == []:
-        ENSG_version -= 1
+        ENSG_version += 1
 
     # IMPLEMENT THIS LATER IN THE TOOL
     # TO DO: find a way to inform the user that not the latest ENSG version is used to employ GTEx Portal
