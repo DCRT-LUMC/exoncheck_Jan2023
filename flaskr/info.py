@@ -176,7 +176,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
         latest_reference_sequence = ''
         for reference_sequence in reference_sequences:
             if reference_sequence.startswith('NC'):
-                if int(reference_sequence.split('.')[1]) > int(latest_reference_sequence.split('.')[1]):
+                if reference_sequence > latest_reference_sequence: # Based on ASCII
                     latest_reference_sequence = reference_sequence
     except:
         latest_reference_sequence = 'N/A'
@@ -215,54 +215,46 @@ def exploit_variant_validator(MANE_select_NM_variant):
 
     # Get the exon skip in NC format and save the exon length
     try:
-        for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence][
-            "exon_structure"]:
+        for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence] \
+                ["exon_structure"]:
             if str(exon["exon_number"]) == exon_number:
                 genomic_end = str(exon["genomic_end"])
                 genomic_start = str(exon["genomic_start"])
                 exon_length = int(exon["cigar"][:-1])
                 NC_exon_NC_format = latest_reference_sequence + ':g.' + genomic_start + '_' + genomic_end + 'del'
-                if exon_number == '1' or exon_number == total_exons:
+                # Include only the coding part for the exon length
+                if exon_number == '1':
                     exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_start"]) + 1
+                    exon_number_interpretation = "First exon can't be skipped"
                 elif exon_number == total_exons:
                     exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_end"]) + 1
-
-                if exon_number == '1':
-                    exon_number_interpretation = "First exon can't be skipped"
-                if exon_number == total_exons:
                     exon_number_interpretation = "Last exon can't be skipped"
     except:
         NC_exon_NC_format = 'N/A'
         exon_length = 'N/A'
 
-
-    # looking at amino acids instead of nucleotides
+    # Convert exon length from nucleotides to amino acids
     try:
         exon_length /= 3.0
     except:
-        exon_length = 0
+        exon_length = 'N/A'
 
     # Check if exon is in frame or out-of-frame
     try:
         if exon_length.is_integer():
             frame = 'In-frame'
-        else:
+        elif exon_length.isdecimal():
             frame = 'Out-of-frame'
     except:
         frame = 'N/A'
 
-    # check percentage of protein length
+    # Get percentage of exon length compared to total protein length
     try:
         percentage_length = round(exon_length / total_protein_length * 100, 2)
-
         exon_length = str(round(exon_length, 2))
     except:
         percentage_length = 'N/A'
         exon_length = 'N/A'
-
-    # Exon to be skipped
-    # req_NC_exon = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/{NC_exon_NC_format}/mane_select?content-type=application%2Fjson')
-    # data_NC_exon = json.loads(req_NC_exon.content)
 
     # Get OMIM identifier
     try:
@@ -271,20 +263,23 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         omim_id = 'N/A'
 
-    # consequence of skipping
-    req3 = requests.get(
-        f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/{NC_exon_NC_format}/mane_select?content-type=application%2Fjson')
-    data3 = json.loads(req3.content)
+    # Below is about retrieving information about the exon skip
+    # This part needs to be revised and the updated VariantValidator API needs to be implemented (whenever
+    # VariantValidator is able to predict the consequence of skipping at protein level based on RNA-reference input
+    req_exon_variantvalidator = requests.get(
+        f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/{NC_exon_NC_format}/ \ '
+        f'mane_select?content-type=application%2Fjson')
+    data_exon_variantvalidator = json.loads(req_exon_variantvalidator.content)
 
-    MANE_select_NM_exon = 'N/A'
-
+    # Get consequence of skipping
     try:
-        for key in data3.keys():
+        for key in data_exon_variantvalidator.keys():
             if key.startswith('NM'):
                 MANE_select_NM_exon = key
-
-        consequence_skipping = data3[MANE_select_NM_exon]['hgvs_predicted_protein_consequence']['tlr']
+        consequence_skipping = data_exon_variantvalidator[MANE_select_NM_exon] \
+            ['hgvs_predicted_protein_consequence']['tlr']
     except:
+        MANE_select_NM_exon = 'N/A'
         consequence_skipping = 'N/A'
 
     return \
@@ -293,8 +288,17 @@ def exploit_variant_validator(MANE_select_NM_variant):
         ENSG_gene, \
         omim_id, \
         gene_symbol, \
-        consequence_variant, exon_number, total_exons, exon_number_interpretation, NC_exon_NC_format, \
-        exon_length, total_protein_length, percentage_length, frame, consequence_skipping, MANE_select_NM_exon
+        consequence_variant, \
+        exon_number, \
+        total_exons, \
+        exon_number_interpretation, \
+        NC_exon_NC_format, \
+        exon_length, \
+        total_protein_length, \
+        percentage_length, \
+        frame, \
+        consequence_skipping, \
+        MANE_select_NM_exon
 
 
 def get_positions_for_lovd(hg38_genomic_description):
