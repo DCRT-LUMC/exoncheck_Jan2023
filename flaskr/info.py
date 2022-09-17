@@ -388,12 +388,12 @@ def get_uniprot_info(ENSG_gene_id):
         uniprot_link = 'N/A'
 
     # get domain info
-    file = urllib.request.urlopen(f'https://rest.uniprot.org/uniprotkb/{uniprot_id}.xml')
-    data = file.read()
-    file.close()
-    uniprot_dict = xmltodict.parse(data)
-
     try:
+        file = urllib.request.urlopen(f'https://rest.uniprot.org/uniprotkb/{uniprot_id}.xml')
+        data = file.read()
+        file.close()
+        uniprot_dict = xmltodict.parse(data)
+
         domain_info = uniprot_dict['uniprot']['entry']['comment'][7]['text']['#text']
     except:
         domain_info = 'N/A'
