@@ -116,6 +116,25 @@ def get_strand(ENSG_gene_id):
     except:
         return 'N/A'
 
+def reformat_hg38_positions(NC_variant):
+    # This function converts the hg38 genomic description (i.e. NC_000023.11:g.49075445_49075447del) to a format
+    # that is accepted by LOVD (i.e. g.49075445_49075447). Note that chromosome information is not needed since
+    # LOVD already known to which chromosome the gene belongs
+    # Input: hg38 genomic description
+    # Output: LOVD conform hg38 description
+    try:
+        hg38_coordinates = NC_variant.split('.')[-1].split('_')
+
+        if len(hg38_coordinates) == 1:
+            hg38_coordinates_for_gene_based_lovd = 'g.'.join([i for i in hg38_coordinates[0] if i.isdigit()])
+        else:
+            coordinate1 = hg38_coordinates[0]
+            coordinate2 = ''.join([i for i in hg38_coordinates[1] if i.isdigit()])
+            hg38_coordinates_for_gene_based_lovd = 'g.' + coordinate1 + '_' + coordinate2
+    except:
+        hg38_coordinates_for_gene_based_lovd = 'N/A'
+
+    return hg38_coordinates_for_gene_based_lovd
 
 def exploit_variant_validator(MANE_select_NM_variant):
     """
@@ -215,14 +234,23 @@ def exploit_variant_validator(MANE_select_NM_variant):
     exon_number_interpretation = ''
 
     # Get the exon skip in NC format and save the exon length
+    # Besides, calculate distance to nearest splice site
+    hg38_coordinates = reformat_hg38_positions(NC_variant)
+    lower_limit_variant_hg38 = hg38_coordinates.split('.')[-1].split('_')[0]
+    try:
+        upper_limit_variant_hg38 = hg38_coordinates.split('.')[-1].split('_')[1]
+    except:
+        upper_limit_variant_hg38 = lower_limit_variant_hg38
+         
     try:
         for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence] \
                 ["exon_structure"]:
             if str(exon["exon_number"]) == exon_number:
-                genomic_end = str(exon["genomic_end"])
-                genomic_start = str(exon["genomic_start"])
+                exon_end = exon["genomic_end"]
+                exon_start = exon["genomic_start"]
                 exon_length = int(exon["cigar"][:-1])
-                NC_exon_NC_format = latest_reference_sequence + ':g.' + genomic_start + '_' + genomic_end + 'del'
+                NC_exon_NC_format = latest_reference_sequence + ':g.' + str(exon_start) + '_' + str(exon_end) + 'del'
+                                
                 # Include only the coding part for the exon length
                 if exon_number == '1':
                     exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_start"]) + 1
@@ -230,9 +258,18 @@ def exploit_variant_validator(MANE_select_NM_variant):
                 elif exon_number == total_exons:
                     exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_end"]) + 1
                     exon_number_interpretation = "Last exon can't be skipped"
+                    
+                # Get nearest splice site
+                distance_1 = int(lower_limit_variant_hg38) - int(exon_start)
+                distance_2 = int(exon_end) - int(upper_limit_variant_hg38)
+                if distance_1 < distance_2:
+                    nearest_splice_distant = distance_1
+                else:
+                    nearest_splice_distant = distance_2
     except:
         NC_exon_NC_format = 'N/A'
         exon_length = 'N/A'
+        nearest_splice_distant = 'N/A'
 
     # Convert exon length from nucleotides to amino acids
     try:
@@ -295,6 +332,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
         exon_number_interpretation, \
         NC_exon_NC_format, \
         exon_length, \
+        nearest_splice_distant, \
         total_protein_length, \
         percentage_length, \
         frame, \
@@ -409,36 +447,34 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
             expression_blood = 'N/A'
             expression_transformed_lymphocytes = 'N/A'
 
-    # Change later!
-    expression_eye = 'https://www.eye-transcriptome.com/search_latest.php'
-
-    return expression_eye, \
-           expression_brain, \
+    return expression_brain, \
            expression_fibroblasts, \
            expression_tibial_nerve, \
            expression_blood, \
            expression_transformed_lymphocytes
 
+def get_eye_expression(ENSG_gene_id):
+    query_gene = ENSG_gene_id.split('.')[0]
+    eye_data = open('flaskr/data/retina_data_threshold_implemented.csv').readlines()
 
-def get_positions_for_lovd(NC_variant):
-    # This function converts the hg38 genomic description (i.e. NC_000023.11:g.49075445_49075447del) to a format
-    # that is accepted by LOVD (i.e. g.49075445_49075447). Note that chromosome information is not needed since
-    # LOVD already known to which chromosome the gene belongs
-    # Input: hg38 genomic description
-    # Output: LOVD conform hg38 description
-    try:
-        hg38_coordinates = NC_variant.split('.')[-1].split('_')
+    periphery_retina_expression = 'N/A'
+    center_retina_expression = 'N/A'
 
-        if len(hg38_coordinates) == 1:
-            hg38_coordinates_for_gene_based_lovd = 'g.'.join([i for i in hg38_coordinates[0] if i.isdigit()])
-        else:
-            coordinate1 = hg38_coordinates[0]
-            coordinate2 = ''.join([i for i in hg38_coordinates[1] if i.isdigit()])
-            hg38_coordinates_for_gene_based_lovd = 'g.' + coordinate1 + '_' + coordinate2
-    except:
-        hg38_coordinates_for_gene_based_lovd = 'N/A'
+    for line in eye_data:
+        gene = line.split(',')[0]
+        if gene == query_gene:
+            periphery = line.split(',')[1]
+            center = line.split(',')[2]
+            if periphery == 'True':
+                periphery_retina_expression = 'Yes'
+            else:
+                periphery_retina_expression = 'No'
 
-    return hg38_coordinates_for_gene_based_lovd
+            if center == 'True':
+                center_retina_expression = 'Yes'
+            else:
+                center_retina_expression = 'No'
+    return periphery_retina_expression, center_retina_expression
 
 
 def get_lovd_info(hg38_variant, NC_variant):
@@ -450,7 +486,7 @@ def get_lovd_info(hg38_variant, NC_variant):
     
     # First get the coordinates in the right format
     chromosome_of_variant = hg38_variant.split('-')[0]
-    hg38_coordinates_for_gene_lovd = get_positions_for_lovd(NC_variant)
+    hg38_coordinates_for_gene_lovd = reformat_hg38_positions(NC_variant)
     hg38_coordinates_for_general_lovd = chromosome_of_variant + ':' + hg38_coordinates_for_gene_lovd
 
     # Find in which genes exact matches are found

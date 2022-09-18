@@ -44,6 +44,7 @@ def output():
         "exon_number_interpretation,"
         "NC_exon,"
         "exon_length,"
+        "nearest_splice_distant,"
         "total_protein_length,"
         "percentage_length,"
         "frame,"
@@ -57,12 +58,13 @@ def output():
 
         # Show expression info
         "gtex_link,"
-        "expression_eye,"
         "expression_brain,"
         "expression_fibroblasts,"
         "expression_tibial_nerve,"
         "expression_blood,"
         "expression_transformed_lymphocytes,"
+        "expression_periphery_retina,"
+        "expression_center_retina,"
 
         # Show LOVD info
         "lovd_output,"
@@ -159,6 +161,7 @@ def create():
                 exon_number_interpretation, \
                 NC_exon, \
                 exon_length, \
+                nearest_splice_distant, \
                 total_protein_length, \
                 percentage_length, \
                 frame, \
@@ -179,7 +182,9 @@ def create():
 
                 uniprot_link, domain_info = get_uniprot_info(ENSG_gene_id)
 
-                expression_eye, expression_brain, expression_fibroblasts, expression_tibial_nerve, expression_blood, expression_transformed_lymphocytes = get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant)
+                expression_brain, expression_fibroblasts, expression_tibial_nerve, expression_blood, expression_transformed_lymphocytes = get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant)
+
+                expression_periphery_retina, expression_center_retina = get_eye_expression(ENSG_gene_id)
 
                 # to do
                 MANE_select_ENST_exon = 'to_do'
@@ -210,6 +215,7 @@ def create():
                     "exon_number_interpretation,"
                     "NC_exon,"
                     "exon_length,"
+                    "nearest_splice_distant,"
                     "total_protein_length,"
                     "percentage_length,"
                     "frame,"
@@ -223,12 +229,13 @@ def create():
 
                     # expression
                     "gtex_link,"
-                    "expression_eye,"
                     "expression_brain,"
                     "expression_fibroblasts,"
                     "expression_tibial_nerve,"
                     "expression_blood,"
                     "expression_transformed_lymphocytes,"
+                    "expression_periphery_retina,"
+                    "expression_center_retina,"
 
                     # lovd
                     "lovd_output,"
@@ -241,10 +248,10 @@ def create():
                     "gnomAD_link,"
                     "decipher_link,"
                     "clinvar_link)"
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?,"
+                    "VALUES (?, ?, ?, ?, ?, ?, ?,"
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
-                    "?, ?, ?, ?, ?, ?, ?, ?)",
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 
                     (# user
                     title,
@@ -268,6 +275,7 @@ def create():
                     exon_number_interpretation,
                     NC_exon,
                     exon_length,
+                    nearest_splice_distant,
                     total_protein_length,
                     percentage_length,
                     frame,
@@ -281,12 +289,13 @@ def create():
 
                     # expression
                     gtex_link,
-                    expression_eye,
                     expression_brain,
                     expression_fibroblasts,
                     expression_tibial_nerve,
                     expression_blood,
                     expression_transformed_lymphocytes,
+                    expression_periphery_retina,
+                    expression_center_retina,
 
                     # lovd
                     lovd_output,

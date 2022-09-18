@@ -36,6 +36,7 @@ CREATE TABLE post (
   exon_length TEXT,
   total_protein_length TEXT,
   percentage_length TEXT,
+  nearest_splice_distant TEXT,
   frame TEXT,
   MANE_select_NM_exon TEXT,
   MANE_select_ENST_exon TEXT,
@@ -47,12 +48,13 @@ CREATE TABLE post (
 
   --expression
   gtex_link TEXT,
-  expression_eye TEXT,
   expression_brain TEXT,
   expression_fibroblasts TEXT,
   expression_tibial_nerve TEXT,
   expression_blood TEXT,
   expression_transformed_lymphocytes TEXT,
+  expression_periphery_retina TEXT,
+  expression_center_retina TEXT,
 
   --lovd
   lovd_output TEXT,
