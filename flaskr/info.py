@@ -454,6 +454,12 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
            expression_transformed_lymphocytes
 
 def get_eye_expression(ENSG_gene_id):
+    # This function checks whether the gene is expressed in the periphery retina and the center retina
+    # Normalized eye expression data is retrieved from the Human Eye Transcriptome Atlas (TO DO: add credits)
+    # When two out of three samples of either periphery or center data show expression, expression is assumed to be true
+    # Input: ENSG gene identifier
+    # Output: periphery and center retina expressions (Yes/No/N/A)
+
     query_gene = ENSG_gene_id.split('.')[0]
     eye_data = open('flaskr/data/retina_data_threshold_implemented.csv').readlines()
 
