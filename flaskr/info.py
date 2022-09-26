@@ -192,7 +192,6 @@ def exploit_variant_validator(MANE_select_NM_variant):
         consequence_variant = 'N/A'
 
     # Get the latest NC reference sequence, which is later used for getting exon information
-    # Get the latest NC reference sequence, which is later used for getting exon information
     try:
         latest_reference_sequence = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["hgvs_genomic_description"].split(':')[0]
     except:
