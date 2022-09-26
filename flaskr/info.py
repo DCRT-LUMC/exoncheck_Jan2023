@@ -126,7 +126,8 @@ def reformat_hg38_positions(NC_variant):
         hg38_coordinates = NC_variant.split('.')[-1].split('_')
 
         if len(hg38_coordinates) == 1:
-            hg38_coordinates_for_gene_based_lovd = 'g.'.join([i for i in hg38_coordinates[0] if i.isdigit()])
+            coordinate1 = ''.join([i for i in hg38_coordinates[0] if i.isdigit()])
+            hg38_coordinates_for_gene_based_lovd = 'g.' + coordinate1
         else:
             coordinate1 = hg38_coordinates[0]
             coordinate2 = ''.join([i for i in hg38_coordinates[1] if i.isdigit()])

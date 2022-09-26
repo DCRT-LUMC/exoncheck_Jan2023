@@ -11,10 +11,12 @@ def reformat_hg38_positions(NC_variant):
     # Input: hg38 genomic description
     # Output: LOVD conform hg38 description
     try:
+        print('NC_variant', NC_variant)
         hg38_coordinates = NC_variant.split('.')[-1].split('_')
 
         if len(hg38_coordinates) == 1:
-            hg38_coordinates_for_gene_based_lovd = 'g.'.join([i for i in hg38_coordinates[0] if i.isdigit()])
+            coordinate1 = ''.join([i for i in hg38_coordinates[0] if i.isdigit()])
+            hg38_coordinates_for_gene_based_lovd = 'g.' + coordinate1
         else:
             coordinate1 = hg38_coordinates[0]
             coordinate2 = ''.join([i for i in hg38_coordinates[1] if i.isdigit()])
@@ -25,81 +27,147 @@ def reformat_hg38_positions(NC_variant):
     return hg38_coordinates_for_gene_based_lovd
 
 
-def get_lovd_info(hg38_variant, NC_variant):
-    # This function checks if there are exact matches available in the LOVD database (TO DO: add credits)
-    # Currently it's only checking the hg19 based database, this should be elaborated with hg18 and hg17
-    # Input: the variant in hg38 format, the variant with NC as reference
-    # Output: A string containing the number of hits per found gene and the corresponding link
-    # TO DO: IMPROVE THIS OUTPUT FORMAT, THINK OF A WAY TO CONVENIENTLY STORE THIS IN A SQL FORMAT
+def exploit_variant_validator(MANE_select_NM_variant):
+    """
+    This function retrieves all VariantValidator information
+    Input: The variant with the MANE select as reference
+    Output: TO DO
+    """
 
-    exact_lovd_match_link = 'N/A'
+    NM_id = MANE_select_NM_variant.split(':')[0]
 
-    final_dict = dict()
+    req_variantvalidator = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/'
+                                        f'{MANE_select_NM_variant}/{NM_id}?content-type=application%2Fjson')
+    data_variantvalidator = json.loads(req_variantvalidator.content)
 
-    # First get the coordinates in the right format
-    chromosome_of_variant = hg38_variant.split('-')[0]
-    hg38_coordinates_for_gene_lovd = reformat_hg38_positions(NC_variant)
-    hg38_coordinates_for_general_lovd = 'chr' + chromosome_of_variant + ':' + hg38_coordinates_for_gene_lovd[2:]
+    req_gene2transcripts = requests.get(f'https://rest.variantvalidator.org/VariantValidator/tools/gene2transcripts_v2/'
+                                        f'{NM_id}/{NM_id}?content-type=application%2Fjson')
+    data_gene2transcripts = json.loads(req_gene2transcripts.content)
 
-    # Find in which genes exact matches are found
+    # Get ENSG identifier
     try:
-
-        genes_containing_exact_hits = []
-        dna_containing_exact_hits = []
-        url = f'http://lovd.nl/search.php?build=hg38&position={hg38_coordinates_for_general_lovd}'
-        url_data = pd.read_table(url, sep='\t')
-
-        for gene in url_data['gene_id']:
-            genes_containing_exact_hits.append(gene)
-
-        for dna in url_data['DNA']:
-            dna_containing_exact_hits.append(dna)
-
-        for i in range(len(genes_containing_exact_hits)):
-            final_dict[genes_containing_exact_hits[i]] = dna_containing_exact_hits[i]
-
-        # Remove duplicates if any
-        genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
-        dna_containing_exact_hits = list(dict.fromkeys(dna_containing_exact_hits))
-
+        ENSG_gene = data_variantvalidator[MANE_select_NM_variant]["gene_ids"]["ensembl_gene_id"]
     except:
-        genes_containing_exact_hits = 'N/A'
-        dna_containing_exact_hits = 'N/A'
+        ENSG_gene = 'N/A'
 
-    # Loop over the genes containing hits
-    if genes_containing_exact_hits != 'N/A':
-        output_exact_hits = ''
+    # Get gene symbol
+    try:
+        gene_symbol = data_variantvalidator[MANE_select_NM_variant]["gene_symbol"]
+    except:
+        gene_symbol = 'N/A'
 
-        for gene in genes_containing_exact_hits:
-            # Start counting from zero again when querying a new gene
-            number_exact_lovd_matches = 0
+    # Get hg38 variant
+    try:
+        NC_variant = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"] \
+            ["hgvs_genomic_description"]
+    except:
+        NC_variant = 'N/A'
 
-            # Check if variant position EXACTLY matches other variants
-            try:
-                req_exact = requests.get(
-                    f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={final_dict[gene]}&format=application/json')
+    # Get hg38 variant position information
+    try:
+        hg38_chr = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["vcf"]["chr"][3:]
+        hg38_pos = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["vcf"]["pos"]
+        hg38_ref = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["vcf"]["ref"]
+        hg38_alt = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["vcf"]["alt"]
+        hg38_variant = hg38_chr + '-' + hg38_pos + '-' + hg38_ref + '-' + hg38_alt
+    except:
+        hg38_variant = 'N/A'
 
-                data_exact = json.loads(req_exact.content)
+    # Get consequence of variant at protein level
+    try:
+        consequence_variant = data_variantvalidator[MANE_select_NM_variant]["hgvs_predicted_protein_consequence"]["tlr"]
+        consequence_variant = consequence_variant.split('.')[-1][1:-1]  # Extract only mutation type part and
+        # remove the brackets
+    except:
+        consequence_variant = 'N/A'
 
-                for variant in data_exact:
-                    number_exact_lovd_matches += 1
-                    lovd_DBID = variant["Variant/DBID"]
-                    exact_lovd_match_link = f'https://databases.lovd.nl/shared/view/{gene}' \
-                                            f'?search_VariantOnGenome%2FDBID=%22{lovd_DBID}%22'
-            except:
-                exact_lovd_match_link = 'N/A'
+    # Get the latest NC reference sequence, which is later used for getting exon information
+    try:
+        reference_sequences = data_variantvalidator[MANE_select_NM_variant]["variant_exonic_positions"].keys()
+        latest_reference_sequence = ''
+        for reference_sequence in reference_sequences:
+            if reference_sequence.startswith('NC'):
+                if reference_sequence > latest_reference_sequence:  # Based on ASCII
+                    latest_reference_sequence = reference_sequence
+    except:
+        latest_reference_sequence = 'N/A'
 
-            output_exact_hits += gene + ': ' + str(
-                number_exact_lovd_matches) + ' hit(s), link: ' + exact_lovd_match_link + ', '
+    # Get exon number
+    try:
+        start_exon_number = data_variantvalidator[MANE_select_NM_variant]["variant_exonic_positions"] \
+            [latest_reference_sequence]["start_exon"]
+        end_exon_number = data_variantvalidator[MANE_select_NM_variant]["variant_exonic_positions"] \
+            [latest_reference_sequence]["end_exon"]
 
-            # https://databases.lovd.nl/shared/view/{gene}?search_VariantOnGenome%2FDBID=%22BEST1_000022%22
+        total_exons = str(data_gene2transcripts["transcripts"][0]["genomic_spans"] \
+                              [latest_reference_sequence]["total_exons"])
 
-    else:
-        output_exact_hits = 'N/A'
+        # If variant covers multiple exons, save the first and last involved exons in variable exon_number
+        if start_exon_number == end_exon_number:
+            exon_number = start_exon_number
+        else:
+            exon_number = start_exon_number + 'till' + end_exon_number
+    except:
+        exon_number = 'N/A'
+        total_exons = 'N/A'
 
-    return output_exact_hits
+    # Get total protein length
+    try:
+        coding_end = data_gene2transcripts["transcripts"][0]["coding_end"]
+        coding_start = data_gene2transcripts["transcripts"][0]["coding_start"]
+        total_protein_length = round((abs(coding_end - coding_start) + 1) / 3)  # Note we have to do +1 because of the
+        # way of counting
+    except:
+        total_protein_length = 'N/A'
 
-get_lovd_info('X-49075439-AAGG-A', 'NC_000023.11:g.49075445_49075447del')
+    # First and last exons can't be skipped. If the variant concerns the first or last exon, show message. Else leave
+    # this message empty. !!!This needs to be designed better!!!
+    exon_number_interpretation = ''
+
+    # Get the exon skip in NC format and save the exon length
+    # Besides, calculate distance to nearest splice site
+    hg38_coordinates = reformat_hg38_positions(NC_variant)
+    print('hg38_coordinates', hg38_coordinates)
+    lower_limit_variant_hg38 = hg38_coordinates.split('.')[-1].split('_')[0]
+    try:
+        upper_limit_variant_hg38 = hg38_coordinates.split('.')[-1].split('_')[1]
+    except:
+        upper_limit_variant_hg38 = lower_limit_variant_hg38
+
+    try:
+        for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence] \
+                ["exon_structure"]:
+            if str(exon["exon_number"]) == exon_number:
+                print('exon: ', exon)
+                exon_end = exon["genomic_end"]
+                exon_start = exon["genomic_start"]
+                exon_length = int(exon["cigar"][:-1])
+                NC_exon_NC_format = latest_reference_sequence + ':g.' + str(exon_start) + '_' + str(exon_end) + 'del'
+
+                # Include only the coding part for the exon length
+                if exon_number == '1':
+                    exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_start"]) + 1
+                    exon_number_interpretation = "First exon can't be skipped"
+                elif exon_number == total_exons:
+                    exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_end"]) + 1
+                    exon_number_interpretation = "Last exon can't be skipped"
+
+                # Get nearest splice site
+                print('abs(int(lower_limit_variant_hg38))', abs(int(lower_limit_variant_hg38)))
+                print('abs(int(exon_start))', abs(int(exon_start)))
+                distance_1 = abs(int(lower_limit_variant_hg38)) - abs(int(exon_start))
+                distance_2 = abs(int(exon_end)) - abs(int(upper_limit_variant_hg38))
+                if distance_1 < distance_2:
+                    nearest_splice_distant = distance_1
+                else:
+                    nearest_splice_distant = distance_2
+    except:
+        nearest_splice_distant = 'N/A'
+
+    print(nearest_splice_distant)
+
+MANE_select_NM_variant = 'NM_000391.4:c.1397T>G'
+exploit_variant_validator(MANE_select_NM_variant)
 
 
 # file1 = open('data/normal_data_retina.csv', 'r')
