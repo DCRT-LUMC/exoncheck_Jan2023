@@ -489,26 +489,40 @@ def get_lovd_info(hg38_variant, NC_variant):
     # Input: the variant in hg38 format, the variant with NC as reference
     # Output: A string containing the number of hits per found gene and the corresponding link
     # TO DO: IMPROVE THIS OUTPUT FORMAT, THINK OF A WAY TO CONVENIENTLY STORE THIS IN A SQL FORMAT
-    
+
+    exact_lovd_match_link = 'N/A'
+
+    final_dict = dict()
+
     # First get the coordinates in the right format
     chromosome_of_variant = hg38_variant.split('-')[0]
     hg38_coordinates_for_gene_lovd = reformat_hg38_positions(NC_variant)
-    hg38_coordinates_for_general_lovd = chromosome_of_variant + ':' + hg38_coordinates_for_gene_lovd
+    hg38_coordinates_for_general_lovd = 'chr' + chromosome_of_variant + ':' + hg38_coordinates_for_gene_lovd[2:]
 
     # Find in which genes exact matches are found
     try:
+
         genes_containing_exact_hits = []
-        url = f'http://lovd.nl/search.php?build=hg19&position={hg38_coordinates_for_general_lovd}'
+        dna_containing_exact_hits = []
+        url = f'http://lovd.nl/search.php?build=hg38&position={hg38_coordinates_for_general_lovd}'
         url_data = pd.read_table(url, sep='\t')
 
         for gene in url_data['gene_id']:
             genes_containing_exact_hits.append(gene)
 
+        for dna in url_data['DNA']:
+            dna_containing_exact_hits.append(dna)
+
+        for i in range(len(genes_containing_exact_hits)):
+            final_dict[genes_containing_exact_hits[i]] = dna_containing_exact_hits[i]
+
         # Remove duplicates if any
         genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
+        dna_containing_exact_hits = list(dict.fromkeys(dna_containing_exact_hits))
 
     except:
         genes_containing_exact_hits = 'N/A'
+        dna_containing_exact_hits = 'N/A'
 
     # Loop over the genes containing hits
     if genes_containing_exact_hits != 'N/A':
@@ -521,8 +535,8 @@ def get_lovd_info(hg38_variant, NC_variant):
             # Check if variant position EXACTLY matches other variants
             try:
                 req_exact = requests.get(
-                    f'https://databases.lovd.nl/shared/api/rest.php/variants/{gene}?'
-                    f'search_position={hg38_coordinates_for_gene_lovd}&format=application/json')
+                    f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={final_dict[gene]}&format=application/json')
+
                 data_exact = json.loads(req_exact.content)
 
                 for variant in data_exact:
@@ -533,7 +547,11 @@ def get_lovd_info(hg38_variant, NC_variant):
             except:
                 exact_lovd_match_link = 'N/A'
 
-            output_exact_hits += gene + ':' + str(number_exact_lovd_matches) + ', link:' + exact_lovd_match_link + ','
+            output_exact_hits += gene + ': ' + str(
+                number_exact_lovd_matches) + ' hit(s), link: ' + exact_lovd_match_link + ', '
+
+            # https://databases.lovd.nl/shared/view/{gene}?search_VariantOnGenome%2FDBID=%22BEST1_000022%22
+
     else:
         output_exact_hits = 'N/A'
 

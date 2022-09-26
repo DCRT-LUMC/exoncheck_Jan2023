@@ -55,7 +55,8 @@ def get_lovd_info(hg38_variant, NC_variant):
         for dna in url_data['DNA']:
             dna_containing_exact_hits.append(dna)
 
-        final_dict[genes_containing_exact_hits[0]] = dna_containing_exact_hits[0]
+        for i in range(len(genes_containing_exact_hits)):
+            final_dict[genes_containing_exact_hits[i]] = dna_containing_exact_hits[i]
 
         # Remove duplicates if any
         genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
@@ -78,28 +79,23 @@ def get_lovd_info(hg38_variant, NC_variant):
                 req_exact = requests.get(
                     f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={final_dict[gene]}&format=application/json')
 
-                print(f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={final_dict[gene]}&format=application/json')
-
                 data_exact = json.loads(req_exact.content)
-                print('data_exact', data_exact)
 
                 for variant in data_exact:
                     number_exact_lovd_matches += 1
                     lovd_DBID = variant["Variant/DBID"]
-                    print('lovd_DBID', lovd_DBID)
                     exact_lovd_match_link = f'https://databases.lovd.nl/shared/view/{gene}' \
                                             f'?search_VariantOnGenome%2FDBID=%22{lovd_DBID}%22'
             except:
                 exact_lovd_match_link = 'N/A'
 
+            output_exact_hits += gene + ': ' + str(
+                number_exact_lovd_matches) + ' hit(s), link: ' + exact_lovd_match_link + ', '
+
             # https://databases.lovd.nl/shared/view/{gene}?search_VariantOnGenome%2FDBID=%22BEST1_000022%22
 
-            output_exact_hits += gene + ':' + str(number_exact_lovd_matches) + ', link:' + exact_lovd_match_link + ','
     else:
         output_exact_hits = 'N/A'
-
-    print(number_exact_lovd_matches)
-    print(output_exact_hits)
 
     return output_exact_hits
 
