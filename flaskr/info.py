@@ -468,14 +468,14 @@ def get_eye_expression(ENSG_gene_id):
             periphery = line.split(',')[1]
             center = line.split(',')[2]
             if periphery == 'True':
-                periphery_retina_expression = 'Yes'
+                periphery_retina_expression = 'yes'
             else:
-                periphery_retina_expression = 'No'
+                periphery_retina_expression = 'no'
 
             if center == 'True':
-                center_retina_expression = 'Yes'
+                center_retina_expression = 'yes'
             else:
-                center_retina_expression = 'No'
+                center_retina_expression = 'no'
     return periphery_retina_expression, center_retina_expression
 
 

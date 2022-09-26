@@ -15,59 +15,59 @@
       <header>
         <div>
           <h3>GENE</h3>
-          <pre>Gene symbol:                     {{ post['gene_symbol'] }}</pre>
-          <pre>ENSG gene id:                    {{ post['ENSG_gene_id'] }}</pre>
+          <pre>Gene symbol:                                 {{ post['gene_symbol'] }}</pre>
+          <pre>ENSG gene id:                                {{ post['ENSG_gene_id'] }}</pre>
 
           <h3>VARIANT</h3>
           <pre>---GENOMIC---</pre>
-          <pre>NC description:                  {{ post['NC_variant'] }}</pre>
-          <pre>Strand:                          {{ post['strand'] }}</pre>
-          <pre>                                 {{ post['hg38_variant'] }}</pre>
+          <pre>NC description:                              {{ post['NC_variant'] }}</pre>
+          <pre>Strand:                                      {{ post['strand'] }}</pre>
+          <pre>                                             {{ post['hg38_variant'] }}</pre>
 
           <pre>---TRANSCRIPT---</pre>
-          <pre>MANE select                      {{ post['MANE_select_NM_variant'] }} </pre>
-          <pre>                                 {{ post['MANE_select_ENST_variant'] }} </pre>
+          <pre>MANE select                                  {{ post['MANE_select_NM_variant'] }} </pre>
+          <pre>                                             {{ post['MANE_select_ENST_variant'] }} </pre>
 
           <pre>---PROTEIN---</pre>
-          <pre>Mutation:                        {{ post['consequence_variant'] }} </pre>
+          <pre>Mutation:                                    {{ post['consequence_variant'] }} </pre>
 
           <h3>EXON TO BE SKIPPED</h3>
           <pre>---GENOMIC---</pre>
-          <pre>Exon number:                     {{ post['exon_number'] }} / {{ post['total_exons'] }} {{post['exon_number_interpretation']}}</pre>
-          <pre>Hg38 description:                {{ post['NC_exon'] }}</pre>
-          <pre>Exon length:                     {{ post['exon_length'] }} / {{ post['total_protein_length'] }} ({{ post['percentage_length'] }}%)</pre>
-          <pre>Distance to nearest splice site  {{ post['nearest_splice_distant'] }}</pre>
-          <pre>Frame:                           {{ post['frame'] }}</pre>
+          <pre>Exon number:                                 {{ post['exon_number'] }} / {{ post['total_exons'] }} {{post['exon_number_interpretation']}}</pre>
+          <pre>Hg38 description:                            {{ post['NC_exon'] }}</pre>
+          <pre>Exon length:                                 {{ post['exon_length'] }} / {{ post['total_protein_length'] }} ({{ post['percentage_length'] }}%) (aa)</pre>
+          <pre>Nearest distance variant <-> exon boundary:  {{ post['nearest_splice_distant'] }} (nt)</pre>
+          <pre>Frame:                                       {{ post['frame'] }}</pre>
 
           <pre>---TRANSCRIPT---</pre>
-          <pre>Skip:                            {{ post['MANE_select_NM_exon'] }} </pre>
-<!--          <pre>                           {{ post['MANE_select_ENST_exon'] }} </pre>-->
+          <pre>Skip:                                        {{ post['MANE_select_NM_exon'] }} </pre>
+<!--          <pre>                                                   {{ post['MANE_select_ENST_exon'] }} </pre>-->
 
           <pre>---PROTEIN---</pre>
-          <pre>Consequence of skipping:         {{ post['consequence_skipping'] }}</pre>
+          <pre>Consequence of skipping:                     {{ post['consequence_skipping'] }}</pre>
 
           <h3>DOMAIN INFO</h3>
-          <pre>Uniprot:                         <a href="{{ post['uniprot_link'] }}">{{ post['uniprot_link'] }}</a></pre>
-          <pre>Domain:                          {{ post['domain_info'] }}</pre>
+          <pre>Uniprot:                                     <a href="{{ post['uniprot_link'] }}">{{ post['uniprot_link'] }}</a></pre>
+          <pre>Domain:                                      {{ post['domain_info'] }}</pre>
 
           <h3>EXPRESSION INFO</h3>
-          <pre>GTEX Portal:                     <a href="{{ post['gtex_link'] }}">{{ post['gtex_link'] }}</a></pre>
-          <pre>Expression brain:                {{ post['expression_brain'] }}</pre>
-          <pre>Expression fibroblasts:          {{ post['expression_fibroblasts'] }}</pre>
-          <pre>Expression tibial_nerve:         {{ post['expression_tibial_nerve'] }}</pre>
-          <pre>Expression blood:                {{ post['expression_blood'] }}</pre>
-          <pre>Expression tr. lymphocytes:      {{ post['expression_transformed_lymphocytes'] }}</pre>
-          <pre>Expression periphery retina:     {{ post['expression_periphery_retina'] }}</pre>
-          <pre>Expression center retina:        {{ post['expression_center_retina'] }}</pre>
+          <pre>GTEX Portal:                                 <a href="{{ post['gtex_link'] }}">{{ post['gtex_link'] }}</a></pre>
+          <pre>Expression brain:                            {{ post['expression_brain'] }}</pre>
+          <pre>Expression fibroblasts:                      {{ post['expression_fibroblasts'] }}</pre>
+          <pre>Expression tibial_nerve:                     {{ post['expression_tibial_nerve'] }}</pre>
+          <pre>Expression blood:                            {{ post['expression_blood'] }}</pre>
+          <pre>Expression tr. lymphocytes:                  {{ post['expression_transformed_lymphocytes'] }}</pre>
+          <pre>Expression periphery retina:                 {{ post['expression_periphery_retina'] }}</pre>
+          <pre>Expression center retina:                    {{ post['expression_center_retina'] }}</pre>
 
           <h3>LOVD INFO</h3>
-          <pre># exact LOVD matches:            {{ post['lovd_output'] }}</pre>
+          <pre># exact LOVD matches:                        {{ post['lovd_output'] }}</pre>
 
           <h3>LINKS</h3>
-          <pre>OMIM:                            <a href="{{ post['omim_link'] }}">{{ post['omim_link'] }}</a></pre>
-          <pre>gnomAD:                          <a href="{{ post['gnomAD_link'] }}">{{ post['gnomAD_link'] }}</a></pre>
-          <pre>Decipher:                        <a href="{{ post['decipher_link'] }}">{{ post['decipher_link'] }}</a></pre>
-          <pre>ClinVar:                         <a href="{{ post['clinvar_link'] }}">{{ post['clinvar_link'] }}</a></pre>
+          <pre>OMIM:                                        <a href="{{ post['omim_link'] }}">{{ post['omim_link'] }}</a></pre>
+          <pre>gnomAD:                                      <a href="{{ post['gnomAD_link'] }}">{{ post['gnomAD_link'] }}</a></pre>
+          <pre>Decipher:                                    <a href="{{ post['decipher_link'] }}">{{ post['decipher_link'] }}</a></pre>
+          <pre>ClinVar:                                     <a href="{{ post['clinvar_link'] }}">{{ post['clinvar_link'] }}</a></pre>
 
         </div>
       </header>
