@@ -506,19 +506,11 @@ def get_lovd_info(hg38_variant, NC_variant):
         for gene in url_data['gene_id']:
             genes_containing_exact_hits.append(gene)
 
-        for dna in url_data['DNA']:
-            dna_containing_exact_hits.append(dna)
-
-        for i in range(len(genes_containing_exact_hits)):
-            final_dict[genes_containing_exact_hits[i]] = dna_containing_exact_hits[i]
-
         # Remove duplicates if any
         genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
-        dna_containing_exact_hits = list(dict.fromkeys(dna_containing_exact_hits))
 
     except:
         genes_containing_exact_hits = 'N/A'
-        dna_containing_exact_hits = 'N/A'
 
     # Loop over the genes containing hits
     if genes_containing_exact_hits != 'N/A':
