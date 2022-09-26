@@ -538,8 +538,6 @@ def get_lovd_info(hg38_variant, NC_variant):
             output_exact_hits += gene + ': ' + str(
                 number_exact_lovd_matches) + ' hit(s), link: ' + exact_lovd_match_link + ', '
 
-            # https://databases.lovd.nl/shared/view/{gene}?search_VariantOnGenome%2FDBID=%22BEST1_000022%22
-
     else:
         output_exact_hits = 'N/A'
 
