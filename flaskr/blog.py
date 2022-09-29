@@ -125,6 +125,7 @@ def create():
         title = request.form["title"]
         syntax_message = check_for_hgvs_format(title)
 
+        # TODO: accept more input formats
         if not title or not title.startswith('NM'):
             flash("Please upload your variant in HGVS format")
 

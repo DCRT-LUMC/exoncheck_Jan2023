@@ -499,7 +499,6 @@ def get_lovd_info(hg38_variant, NC_variant):
     try:
 
         genes_containing_exact_hits = []
-        dna_containing_exact_hits = []
         url = f'http://lovd.nl/search.php?build=hg38&position={hg38_coordinates_for_general_lovd}'
         url_data = pd.read_table(url, sep='\t')
 
