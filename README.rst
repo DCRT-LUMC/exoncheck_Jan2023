@@ -26,9 +26,9 @@ Create a virtualenv and activate it::
     $ python3 -m venv venv
     $ . venv/bin/activate
 
-Or on Windows cmd::
-
-    Download zip file, unzip file and go to directory in Windows Powershell
+Or on Windows cmd
+Download zip file, unzip file and go to directory in Windows Powershell::
+    
     > py -3 -m venv venv
     > venv\Scripts\activate.bat
     
@@ -40,8 +40,14 @@ Install Flaskr::
 Or if you are using the main branch, install Flask from source before
 installing Flaskr::
 
-    $ py -m pip install -e ../..
-    $ py -m pip install -e .
+    > py -m pip install -e ../..
+    > py -m pip install -e .
+
+Install other required packages if not installed already::
+
+    > py -m pip install requests
+    > py -m pip install xmltodict
+    > py -m pip install pandas
 
 
 Run
