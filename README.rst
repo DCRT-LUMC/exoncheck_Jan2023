@@ -26,8 +26,8 @@ Create a virtualenv and activate it::
     $ python3 -m venv venv
     $ . venv/bin/activate
 
-Or on Windows cmd
-Download zip file, unzip file and go to directory in Windows Powershell::
+Or on Windows cmd: 
+Download zip file, unzip file and go to directory in Windows Powershell. Subsequently do::
     
     > py -3 -m venv venv
     > venv\Scripts\activate.bat
