@@ -511,6 +511,8 @@ def get_lovd_info(hg38_variant, NC_variant):
     except:
         genes_containing_exact_hits = 'N/A'
 
+    print("genes_containing_exact_hits", genes_containing_exact_hits)
+
     # Loop over the genes containing hits
     if genes_containing_exact_hits != 'N/A':
         output_exact_hits = ''
@@ -522,7 +524,9 @@ def get_lovd_info(hg38_variant, NC_variant):
             # Check if variant position EXACTLY matches other variants
             try:
                 req_exact = requests.get(
-                    f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={final_dict[gene]}&format=application/json')
+                    f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={c-description}&format=application/json')
+
+                print(f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={hg38_coordinates_for_general_lovd}&format=application/json')
 
                 data_exact = json.loads(req_exact.content)
 
