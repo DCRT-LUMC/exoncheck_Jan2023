@@ -55,7 +55,7 @@ Run
 
 ::
 
-Initialiase the database (only the first time or if you want a new database, NOTE: IT OVERWRITES THE EXISTING DATABASE)::
+Initialiase the database (only the first time or if you want a new database, **IT OVERWRITES THE EXISTING DATABASE**)::
 
     $ flask init-db 
     
@@ -67,7 +67,7 @@ Run::
 
 Or on Windows cmd::
 
-Initialiase the database (only the first time or if you want a new database, NOTE: IT OVERWRITES THE EXISTING DATABASE)::
+Initialiase the database (only the first time or if you want a new database, **IT OVERWRITES THE EXISTING DATABASE**)::
 
     > py -m flask init-db
     
