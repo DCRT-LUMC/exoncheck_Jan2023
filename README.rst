@@ -28,18 +28,20 @@ Create a virtualenv and activate it::
 
 Or on Windows cmd::
 
-    $ py -3 -m venv venv
-    $ venv\Scripts\activate.bat
+    Download zip file, unzip file and go to directory in Windows Powershell
+    > py -3 -m venv venv
+    > venv\Scripts\activate.bat
+    
 
 Install Flaskr::
 
-    $ pip install -e .
+    > py -m pip install -e .
 
 Or if you are using the main branch, install Flask from source before
 installing Flaskr::
 
-    $ pip install -e ../..
-    $ pip install -e .
+    $ py -m pip install -e ../..
+    $ py -m pip install -e .
 
 
 Run
@@ -49,15 +51,13 @@ Run
 
     $ export FLASK_APP=flaskr
     $ export FLASK_ENV=development
-    $ flask init-db
+    $ flask init-db (only the first time or if you want a new database, NOTE: IT OVERWRITES THE EXISTING DATABASE)
     $ flask run
 
 Or on Windows cmd::
 
-    > set FLASK_APP=flaskr
-    > set FLASK_ENV=development
-    > flask init-db
-    > flask run
+    > py -m flask init-db (only the first time or if you want a new database, NOTE: IT OVERWRITES THE EXISTING DATABASE)
+    > py -m flask --app flaskr --debug run
 
 Open http://127.0.0.1:5000 in a browser.
 
