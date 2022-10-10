@@ -277,7 +277,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     try:
         if exon_length.is_integer():
             frame = 'In-frame'
-        elif exon_length.isdecimal():
+        elif exon_length != 'N/A':
             frame = 'Out-of-frame'
     except:
         frame = 'N/A'
