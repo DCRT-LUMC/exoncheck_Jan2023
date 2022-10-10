@@ -5,6 +5,10 @@ ExonCheck is built on top of the Flask `tutorial`_.
 
 .. _tutorial: https://flask.palletsprojects.com/tutorial/
 
+Important notes
+-------
+Domain information is not provided correctly yet, it shows general domain information and not the specific domains of the exon to be skipped
+Currently working on showing the number of hits in the LOVD database
 
 Install
 -------
