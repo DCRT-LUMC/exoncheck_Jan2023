@@ -278,7 +278,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     try:
         if exon_length.is_integer():
             frame = 'In-frame'
-        elif exon_length.isdecimal():
+        elif exon_length != 'N/A':
             frame = 'Out-of-frame'
     except:
         frame = 'N/A'
@@ -512,6 +512,8 @@ def get_lovd_info(hg38_variant, NC_variant):
     except:
         genes_containing_exact_hits = 'N/A'
 
+    print("genes_containing_exact_hits", genes_containing_exact_hits)
+
     # Loop over the genes containing hits
     if genes_containing_exact_hits != 'N/A':
         output_exact_hits = ''
@@ -523,9 +525,7 @@ def get_lovd_info(hg38_variant, NC_variant):
             dna_id = genes_containing_exact_hits.get(gene)
             # Check if variant position EXACTLY matches other variants
             try:
-                req_exact = requests.get(
-                    f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={dna_id}&format=application/json')
-
+                req_exact = requests.get(f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={dna_id}&format=application/json')
                 data_exact = json.loads(req_exact.content)
 
                 for variant in data_exact:

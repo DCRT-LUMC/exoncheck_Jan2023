@@ -1,17 +1,18 @@
 Flaskr
 ======
 
-The basic blog app built in the Flask `tutorial`_.
+ExonCheck is built on top of the Flask `tutorial`_.
 
 .. _tutorial: https://flask.palletsprojects.com/tutorial/
 
+Important notes
+-------
+Domain information is not provided correctly yet, it shows general domain information and not the specific domains of the exon to be skipped
+Currently working on showing the number of hits in the LOVD database
 
 Install
 -------
-
-**Be sure to use the same version of the code as the version of the docs
-you're reading.** You probably want the latest tagged version, but the
-default Git version is the main branch. ::
+Install::
 
     # clone the repository
     $ git clone https://github.com/pallets/flask
@@ -26,20 +27,28 @@ Create a virtualenv and activate it::
     $ python3 -m venv venv
     $ . venv/bin/activate
 
-Or on Windows cmd::
-
-    $ py -3 -m venv venv
-    $ venv\Scripts\activate.bat
+Or on Windows cmd
+Download zip file, unzip file and go to directory in Windows Powershell. Subsequently do::
+    
+    > py -3 -m venv venv
+    > venv\Scripts\activate.bat
+    
 
 Install Flaskr::
 
-    $ pip install -e .
+    > py -m pip install -e .
 
 Or if you are using the main branch, install Flask from source before
 installing Flaskr::
 
-    $ pip install -e ../..
-    $ pip install -e .
+    > py -m pip install -e ../..
+    > py -m pip install -e .
+
+Install other required packages if not installed already::
+
+    > py -m pip install requests
+    > py -m pip install xmltodict
+    > py -m pip install pandas
 
 
 Run
@@ -47,17 +56,25 @@ Run
 
 ::
 
+Initialiase the database (only the first time or if you want a new database, **IT OVERWRITES THE EXISTING DATABASE**)::
+
+    $ flask init-db 
+    
+Run::    
+
     $ export FLASK_APP=flaskr
     $ export FLASK_ENV=development
-    $ flask init-db
     $ flask run
 
 Or on Windows cmd::
 
-    > set FLASK_APP=flaskr
-    > set FLASK_ENV=development
-    > flask init-db
-    > flask run
+Initialiase the database (only the first time or if you want a new database, **IT OVERWRITES THE EXISTING DATABASE**)::
+
+    > py -m flask init-db
+    
+Run::
+    
+    > py -m flask --app flaskr --debug run
 
 Open http://127.0.0.1:5000 in a browser.
 

@@ -283,12 +283,16 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         exon_length = 'N/A'
 
+    print('exon_length: ', exon_length)
+
     # Check if exon is in frame or out-of-frame
     try:
+        print('test1')
         if exon_length.is_integer():
             frame = 'In-frame'
-        elif exon_length.isdecimal():
+        else:
             frame = 'Out-of-frame'
+            print('test')
     except:
         frame = 'N/A'
 
@@ -561,6 +565,10 @@ def get_lovd_info(hg38_variant, NC_variant):
 hg38_variant = "11-6615199-A-C"
 NC_variant = "NC_000011.10:g.6615199A>C"
 get_lovd_info(hg38_variant, NC_variant)
+
+exploit_variant_validator("NM_014334.4:c.283dup")
+
+
 
 
 # def get_uniprot_info(ENSG_gene_id):
