@@ -498,16 +498,16 @@ def get_lovd_info(hg38_variant, NC_variant):
 
     # Find in which genes exact matches are found
     try:
-
-        genes_containing_exact_hits = []
+    # Changing the nm_accession ID edit
+        genes_containing_exact_hits = {}
         url = f'http://lovd.nl/search.php?build=hg38&position={hg38_coordinates_for_general_lovd}'
         url_data = pd.read_table(url, sep='\t')
 
-        for gene in url_data['gene_id']:
-            genes_containing_exact_hits.append(gene)
+        for i, gene in enumerate(url_data['gene_id']):
+            genes_containing_exact_hits[gene] = url_data["DNA"][i]
 
         # Remove duplicates if any
-        genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
+#        genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
 
     except:
         genes_containing_exact_hits = 'N/A'
@@ -519,11 +519,12 @@ def get_lovd_info(hg38_variant, NC_variant):
         for gene in genes_containing_exact_hits:
             # Start counting from zero again when querying a new gene
             number_exact_lovd_matches = 0
-
+            # Get nm_accession id from dictionary for corresponding gene
+            dna_id = genes_containing_exact_hits.get(gene)
             # Check if variant position EXACTLY matches other variants
             try:
                 req_exact = requests.get(
-                    f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={final_dict[gene]}&format=application/json')
+                    f'http://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={dna_id}&format=application/json')
 
                 data_exact = json.loads(req_exact.content)
 
