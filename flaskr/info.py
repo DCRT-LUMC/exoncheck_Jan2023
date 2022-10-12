@@ -1,3 +1,4 @@
+# trying again
 import requests
 import json
 import xmltodict
@@ -237,7 +238,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
         upper_limit_variant_hg38 = hg38_coordinates.split('.')[-1].split('_')[1]
     except:
         upper_limit_variant_hg38 = lower_limit_variant_hg38
-         
+
     try:
         for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence] \
                 ["exon_structure"]:
@@ -246,7 +247,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
                 exon_start = exon["genomic_start"]
                 exon_length = int(exon["cigar"][:-1])
                 NC_exon_NC_format = latest_reference_sequence + ':g.' + str(exon_start) + '_' + str(exon_end) + 'del'
-                                
+
                 # Include only the coding part for the exon length
                 if exon_number == '1':
                     exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_start"]) + 1
@@ -254,7 +255,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
                 elif exon_number == total_exons:
                     exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_end"]) + 1
                     exon_number_interpretation = "Last exon can't be skipped"
-                    
+
                 # Get nearest splice site
                 distance_1 = int(lower_limit_variant_hg38) - int(exon_start)
                 distance_2 = int(exon_end) - int(upper_limit_variant_hg38)
