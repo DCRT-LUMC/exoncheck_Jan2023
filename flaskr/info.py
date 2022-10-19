@@ -309,7 +309,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     # Get consequence of skipping
     try:
         for key in data_exon_variantvalidator.keys():
-            if key.startswith('NM'):
+            if key.startswith(NM_id):
                 MANE_select_NM_exon = key
         consequence_skipping = data_exon_variantvalidator[MANE_select_NM_exon] \
             ['hgvs_predicted_protein_consequence']['tlr']
