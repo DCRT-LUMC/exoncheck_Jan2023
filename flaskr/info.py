@@ -171,8 +171,10 @@ def exploit_variant_validator(MANE_select_NM_variant):
     try:
         NC_variant = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"] \
             ["hgvs_genomic_description"]
+        latest_reference_sequence = NC_variant.split(':')[0]
     except:
         NC_variant = 'N/A'
+        latest_reference_sequence = 'N/A'
 
     # Get hg38 variant position information
     try:
@@ -311,19 +313,24 @@ def exploit_variant_validator(MANE_select_NM_variant):
         for key in data_exon_variantvalidator.keys():
             if key.startswith(NM_id):
                 MANE_select_NM_exon = key
-        # Format the r. exon skip id
-        MANE_select_exon_split = re.split('[_:.+]', MANE_select_NM_exon)
-        NM_r_exon = (NM_id + ":r." + str(int(MANE_select_exon_split[4]) - int(MANE_select_exon_split[-1][-4])) + "_" + MANE_select_exon_split[5] + "del")
-
-        req_rnavariant = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/'
+        try:
+            if '+' in MANE_select_NM_exon:
+                # Format the r. exon skip id
+                MANE_select_exon_split = re.split('[_:.+]', MANE_select_NM_exon)
+                NM_r_exon = (NM_id + ":r." + str(int(MANE_select_exon_split[4]) - int(MANE_select_exon_split[-1][-4])) + "_" + MANE_select_exon_split[5] + "del")
+            else:
+                NM_r_exon = MANE_select_NM_exon.replace("c", "r")
+            # Query the API to get the consequence of skipping
+            req_rnavariant = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/'
                                         f'{NM_r_exon}/{NM_id}?content-type=application%2Fjson')
-        data_rnavariant = json.loads(req_rnavariant.content)
+            data_rnavariant = json.loads(req_rnavariant.content)
 
-        consequence_skipping = data_rnavariant[MANE_select_NM_exon]["rna_variant_descriptions"]["translation"]
+            consequence_skipping = data_rnavariant[MANE_select_NM_exon]["rna_variant_descriptions"]["translation"]
+        except:
+            consequence_skipping = 'N/A'
     except:
         MANE_select_NM_exon = 'N/A'
-        consequence_skipping = 'N/A'
-        
+
     return \
         NC_variant, \
         hg38_variant, \
