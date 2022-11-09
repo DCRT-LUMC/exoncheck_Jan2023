@@ -127,7 +127,7 @@ def create():
 
         # TODO: accept more input formats
         if not title or not title.startswith('NM'):
-            flash("Please upload your variant in HGVS format")
+            flash("Please upload your variant in HGVS format.")
 
         if syntax_message != '':
             flash(syntax_message)
@@ -140,173 +140,174 @@ def create():
             if match_message != '':
                 flash(match_message)
 
-            # Get MANE select in NM format
-            MANE_select_NM_variant, \
-            MANE_select_ENST_variant = get_MANE_select_identifiers(title)
+            else:
+                # Get MANE select in NM format
+                MANE_select_NM_variant, \
+                MANE_select_ENST_variant = get_MANE_select_identifiers(title)
 
-            # Exploit variant validator
-            NC_variant, \
-            hg38_variant, \
-            ENSG_gene_id, \
-            omim_id, \
-            gene_symbol, \
-            consequence_variant, \
-            exon_number, \
-            total_exons, \
-            exon_number_interpretation, \
-            NC_exon, \
-            exon_length, \
-            nearest_splice_distant, \
-            total_protein_length, \
-            percentage_length, \
-            frame, \
-            consequence_skipping, \
-            MANE_select_NM_exon = exploit_variant_validator(MANE_select_NM_variant)
+                # Exploit variant validator
+                NC_variant, \
+                hg38_variant, \
+                ENSG_gene_id, \
+                omim_id, \
+                gene_symbol, \
+                consequence_variant, \
+                exon_number, \
+                total_exons, \
+                exon_number_interpretation, \
+                NC_exon, \
+                exon_length, \
+                nearest_splice_distant, \
+                total_protein_length, \
+                percentage_length, \
+                frame, \
+                consequence_skipping, \
+                MANE_select_NM_exon = exploit_variant_validator(MANE_select_NM_variant)
 
-            # Get LOVD information
-            lovd_output = get_lovd_info(hg38_variant, NC_variant)
+                # Get LOVD information
+                lovd_output = get_lovd_info(hg38_variant, NC_variant)
 
-            # Get strand
-            strand = get_strand(ENSG_gene_id)
+                # Get strand
+                strand = get_strand(ENSG_gene_id)
 
-            # Get links
-            gtex_link = 'https://gtexportal.org/home/gene/' + ENSG_gene_id
-            omim_link = 'https://www.omim.org/entry/' + omim_id
-            gnomAD_link = 'https://gnomad.broadinstitute.org/gene/' + ENSG_gene_id
-            decipher_link = 'https://www.deciphergenomics.org/sequence-variant/' + hg38_variant
-            clinvar_link = 'https://www.ncbi.nlm.nih.gov/clinvar/?term=' + MANE_select_NM_variant
+                # Get links
+                gtex_link = 'https://gtexportal.org/home/gene/' + ENSG_gene_id
+                omim_link = 'https://www.omim.org/entry/' + omim_id
+                gnomAD_link = 'https://gnomad.broadinstitute.org/gene/' + ENSG_gene_id
+                decipher_link = 'https://www.deciphergenomics.org/sequence-variant/' + hg38_variant
+                clinvar_link = 'https://www.ncbi.nlm.nih.gov/clinvar/?term=' + MANE_select_NM_variant
 
-            uniprot_link, domain_info = get_uniprot_info(ENSG_gene_id)
+                uniprot_link, domain_info = get_uniprot_info(ENSG_gene_id)
 
-            # Get expressions
-            expression_brain, expression_fibroblasts, expression_tibial_nerve, expression_blood, expression_transformed_lymphocytes = get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant)
-            expression_periphery_retina, expression_center_retina = get_eye_expression(ENSG_gene_id)
+                # Get expressions
+                expression_brain, expression_fibroblasts, expression_tibial_nerve, expression_blood, expression_transformed_lymphocytes = get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant)
+                expression_periphery_retina, expression_center_retina = get_eye_expression(ENSG_gene_id)
 
-            # to do
-            MANE_select_ENST_exon = 'to_do'
+                # to do
+                MANE_select_ENST_exon = 'to_do'
 
 
-            db = get_db()
-            db.execute(
-                "INSERT INTO post "
-                # user
-                "(title,"
-                "author_id,"
-    
-                # gene
-                "gene_symbol,"
-                "ENSG_gene_id,"
-    
-                # variant
-                "NC_variant,"
-                "strand,"
-                "hg38_variant,"
-                "MANE_select_NM_variant,"
-                "MANE_select_ENST_variant,"
-                "consequence_variant,"
-    
-                # exon
-                "exon_number,"
-                "total_exons,"
-                "exon_number_interpretation,"
-                "NC_exon,"
-                "exon_length,"
-                "nearest_splice_distant,"
-                "total_protein_length,"
-                "percentage_length,"
-                "frame,"
-                "MANE_select_NM_exon,"
-                "MANE_select_ENST_exon,"
-                "consequence_skipping,"
-    
-                # domain
-                "uniprot_link,"
-                "domain_info,"
-    
-                # expression
-                "gtex_link,"
-                "expression_brain,"
-                "expression_fibroblasts,"
-                "expression_tibial_nerve,"
-                "expression_blood,"
-                "expression_transformed_lymphocytes,"
-                "expression_periphery_retina,"
-                "expression_center_retina,"
-    
-                # lovd
-                "lovd_output,"
-    
-                # identifiers
-                "omim_id,"
-    
-                # links
-                "omim_link,"
-                "gnomAD_link,"
-                "decipher_link,"
-                "clinvar_link)"
-                "VALUES (?, ?, ?, ?, ?, ?, ?,"
-                "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-                "?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
-                "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                db = get_db()
+                db.execute(
+                    "INSERT INTO post "
+                    # user
+                    "(title,"
+                    "author_id,"
 
-                (# user
-                title,
-                g.user["id"],
+                    # gene
+                    "gene_symbol,"
+                    "ENSG_gene_id,"
 
-                # gene
-                gene_symbol,
-                ENSG_gene_id,
+                    # variant
+                    "NC_variant,"
+                    "strand,"
+                    "hg38_variant,"
+                    "MANE_select_NM_variant,"
+                    "MANE_select_ENST_variant,"
+                    "consequence_variant,"
 
-                # variant
-                NC_variant,
-                strand,
-                hg38_variant,
-                MANE_select_NM_variant,
-                MANE_select_ENST_variant,
-                consequence_variant,
+                    # exon
+                    "exon_number,"
+                    "total_exons,"
+                    "exon_number_interpretation,"
+                    "NC_exon,"
+                    "exon_length,"
+                    "nearest_splice_distant,"
+                    "total_protein_length,"
+                    "percentage_length,"
+                    "frame,"
+                    "MANE_select_NM_exon,"
+                    "MANE_select_ENST_exon,"
+                    "consequence_skipping,"
 
-                # exon
-                exon_number,
-                total_exons,
-                exon_number_interpretation,
-                NC_exon,
-                exon_length,
-                nearest_splice_distant,
-                total_protein_length,
-                percentage_length,
-                frame,
-                MANE_select_NM_exon,
-                MANE_select_ENST_exon,
-                consequence_skipping,
+                    # domain
+                    "uniprot_link,"
+                    "domain_info,"
 
-                # domain
-                uniprot_link,
-                domain_info,
+                    # expression
+                    "gtex_link,"
+                    "expression_brain,"
+                    "expression_fibroblasts,"
+                    "expression_tibial_nerve,"
+                    "expression_blood,"
+                    "expression_transformed_lymphocytes,"
+                    "expression_periphery_retina,"
+                    "expression_center_retina,"
 
-                # expression
-                gtex_link,
-                expression_brain,
-                expression_fibroblasts,
-                expression_tibial_nerve,
-                expression_blood,
-                expression_transformed_lymphocytes,
-                expression_periphery_retina,
-                expression_center_retina,
+                    # lovd
+                    "lovd_output,"
 
-                # lovd
-                lovd_output,
+                    # identifiers
+                    "omim_id,"
 
-                # identifiers
-                omim_id,
+                    # links
+                    "omim_link,"
+                    "gnomAD_link,"
+                    "decipher_link,"
+                    "clinvar_link)"
+                    "VALUES (?, ?, ?, ?, ?, ?, ?,"
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 
-                # links
-                omim_link,
-                gnomAD_link,
-                decipher_link,
-                clinvar_link))
+                    (# user
+                    title,
+                    g.user["id"],
 
-            db.commit()
-            return redirect(url_for("blog.output"))
+                    # gene
+                    gene_symbol,
+                    ENSG_gene_id,
+
+                    # variant
+                    NC_variant,
+                    strand,
+                    hg38_variant,
+                    MANE_select_NM_variant,
+                    MANE_select_ENST_variant,
+                    consequence_variant,
+
+                    # exon
+                    exon_number,
+                    total_exons,
+                    exon_number_interpretation,
+                    NC_exon,
+                    exon_length,
+                    nearest_splice_distant,
+                    total_protein_length,
+                    percentage_length,
+                    frame,
+                    MANE_select_NM_exon,
+                    MANE_select_ENST_exon,
+                    consequence_skipping,
+
+                    # domain
+                    uniprot_link,
+                    domain_info,
+
+                    # expression
+                    gtex_link,
+                    expression_brain,
+                    expression_fibroblasts,
+                    expression_tibial_nerve,
+                    expression_blood,
+                    expression_transformed_lymphocytes,
+                    expression_periphery_retina,
+                    expression_center_retina,
+
+                    # lovd
+                    lovd_output,
+
+                    # identifiers
+                    omim_id,
+
+                    # links
+                    omim_link,
+                    gnomAD_link,
+                    decipher_link,
+                    clinvar_link))
+
+                    db.commit()
+                    return redirect(url_for("blog.output"))
     return render_template("blog/create.html")
 
 
