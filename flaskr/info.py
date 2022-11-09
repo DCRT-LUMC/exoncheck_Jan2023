@@ -1,10 +1,10 @@
-# trying again
 import requests
 import json
 import xmltodict
 import urllib.parse
 import urllib.request
 import pandas as pd
+import re
 
 
 def check_for_hgvs_format(uploaded_variant):
@@ -300,7 +300,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
 
     # Below is about retrieving information about the exon skip
     # This part needs to be revised and the updated VariantValidator API needs to be implemented (whenever
-    # VariantValidator is able to predict the consequence of skipping at protein level based on RNA-reference input
+    # VariantValidator is able to predict the consequence of skipping at protein level based on RNA-reference input)
     req_exon_variantvalidator = requests.get(
         f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/{NC_exon_NC_format}/ \ '
         f'mane_select?content-type=application%2Fjson')
@@ -311,12 +311,19 @@ def exploit_variant_validator(MANE_select_NM_variant):
         for key in data_exon_variantvalidator.keys():
             if key.startswith(NM_id):
                 MANE_select_NM_exon = key
-        consequence_skipping = data_exon_variantvalidator[MANE_select_NM_exon] \
-            ['hgvs_predicted_protein_consequence']['tlr']
+        # Format the r. exon skip id
+        MANE_select_exon_split = re.split('[_:.+]', MANE_select_NM_exon)
+        NM_r_exon = (NM_id + ":r." + str(int(MANE_select_exon_split[4]) - int(MANE_select_exon_split[-1][-4])) + "_" + MANE_select_exon_split[5] + "del")
+
+        req_rnavariant = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/'
+                                        f'{NM_r_exon}/{NM_id}?content-type=application%2Fjson')
+        data_rnavariant = json.loads(req_rnavariant.content)
+
+        consequence_skipping = data_rnavariant[MANE_select_NM_exon]["rna_variant_descriptions"]["translation"]
     except:
         MANE_select_NM_exon = 'N/A'
         consequence_skipping = 'N/A'
-
+        
     return \
         NC_variant, \
         hg38_variant, \
@@ -482,14 +489,12 @@ def get_eye_expression(ENSG_gene_id):
 
 def get_lovd_info(hg38_variant, NC_variant):
     # This function checks if there are exact matches available in the LOVD database (TO DO: add credits)
-    # Currently it's only checking the hg19 based database, this should be elaborated with hg18 and hg17
+    # Currently it's only checking the hg19 based database, this should be elaborated with hg18 and hg17.
     # Input: the variant in hg38 format, the variant with NC as reference
     # Output: A string containing the number of hits per found gene and the corresponding link
     # TO DO: IMPROVE THIS OUTPUT FORMAT, THINK OF A WAY TO CONVENIENTLY STORE THIS IN A SQL FORMAT
 
     exact_lovd_match_link = 'N/A'
-
-    final_dict = dict()
 
     # First get the coordinates in the right format
     chromosome_of_variant = hg38_variant.split('-')[0]
