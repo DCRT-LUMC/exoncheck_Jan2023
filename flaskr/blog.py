@@ -306,8 +306,8 @@ def create():
                     decipher_link,
                     clinvar_link))
 
-                    db.commit()
-                    return redirect(url_for("blog.output"))
+                db.commit()
+                return redirect(url_for("blog.output"))
     return render_template("blog/create.html")
 
 
