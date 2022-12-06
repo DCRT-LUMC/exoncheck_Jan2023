@@ -223,8 +223,9 @@ def exploit_variant_validator(MANE_select_NM_variant):
     try:
         coding_end = data_gene2transcripts["transcripts"][0]["coding_end"]
         coding_start = data_gene2transcripts["transcripts"][0]["coding_start"]
-        total_protein_length = round((abs(coding_end - coding_start) + 1) / 3)  # Note we have to do +1 because of the
+#        total_protein_length = round((abs(coding_end - coding_start) + 1) / 3)  # Note we have to do +1 because of the
         # way of counting
+        total_protein_length = (abs(coding_end - coding_start) - 2) / 3
     except:
         total_protein_length = 'N/A'
 
@@ -241,38 +242,55 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         upper_limit_variant_hg38 = lower_limit_variant_hg38
 
+    # To get the coding exon positions
+    try:
+        for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence]["exon_structure"]:
+            transcript_start = exon["transcript_start"]
+            transcript_end = exon["transcript_end"]
+            if coding_start >= transcript_start and coding_start <= transcript_end:
+                first_coding = exon["exon_number"]
+            if coding_end >= transcript_start and coding_end <= transcript_end:
+                last_coding = exon["exon_number"]
+
+        coding_exons = str(first_coding) + " to " + str(last_coding)
+    except:
+        coding_exons = 'N/A'
+
     try:
         for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence] \
                 ["exon_structure"]:
             if str(exon["exon_number"]) == exon_number:
                 exon_end = exon["genomic_end"]
                 exon_start = exon["genomic_start"]
-                exon_length = int(exon["cigar"][:-1])
+                exon_length_nu = int(exon["cigar"][:-1])
                 NC_exon_NC_format = latest_reference_sequence + ':g.' + str(exon_start) + '_' + str(exon_end) + 'del'
 
                 # Include only the coding part for the exon length
-                if exon_number == '1':
-                    exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_start"]) + 1
-                    exon_number_interpretation = "First exon can't be skipped"
-                elif exon_number == total_exons:
-                    exon_length = exon_length - int(data_gene2transcripts["transcripts"][0]["coding_end"]) + 1
-                    exon_number_interpretation = "Last exon can't be skipped"
+                if exon_number == str(first_coding):
+                    exon_length_nu = exon_length_nu - int(data_gene2transcripts["transcripts"][0]["coding_start"]) + 1
+                    exon_number_interpretation = "First exon can't be skipped."
+                elif exon_number == str(last_coding):
+                    exon_length_nu = exon_length_nu - int(data_gene2transcripts["transcripts"][0]["coding_end"]) + 1
+                    exon_number_interpretation = "Last exon can't be skipped."
 
                 # Get nearest splice site
                 distance_1 = int(lower_limit_variant_hg38) - int(exon_start)
                 distance_2 = int(exon_end) - int(upper_limit_variant_hg38)
                 if distance_1 < distance_2:
                     nearest_splice_distant = distance_1
+                    nearest_end = "5'"
                 else:
                     nearest_splice_distant = distance_2
+                    nearest_end = "3'"
     except:
         NC_exon_NC_format = 'N/A'
-        exon_length = 'N/A'
+        exon_length_nu = 'N/A'
         nearest_splice_distant = 'N/A'
+        nearest_end = 'N/A'
 
     # Convert exon length from nucleotides to amino acids
     try:
-        exon_length /= 3.0
+        exon_length = exon_length_nu/3.0
     except:
         exon_length = 'N/A'
 
@@ -285,6 +303,24 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         frame = 'N/A'
 
+    # Get interpretation of distance to nearest splice boundary
+    try:
+        if frame == 'Out-of-frame':
+            if distance_1 < distance_2:
+                if distance_1/exon_length_nu <= 0.7:
+                    splice_dist_interpretation = 'Variant in the first 70% of the coding exon. Not eligible.'
+                else:
+                    splice_dist_interpretation = 'Variant in the last 30% of the coding exon. Possibly eligible.'
+            elif distance_2 <= distance_1:
+                if distance_2/exon_length_nu < 0.3:
+                    splice_dist_interpretation = 'Variant in the last 30% of the coding exon. Possibly eligible.'
+                else:
+                    splice_dist_interpretation = 'Variant in the first 70% of the coding exon. Not eligible.'
+        else:
+            splice_dist_interpretation = ''
+    except:
+        splice_dist_interpretation = 'N/A'
+
     # Get percentage of exon length compared to total protein length
     try:
         percentage_length = round(exon_length / total_protein_length * 100, 2)
@@ -292,6 +328,14 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         percentage_length = 'N/A'
         exon_length = 'N/A'
+
+    # Check exon length conditions
+    if percentage_length <= 10:
+        length_condition = 'Exon length is small enough to be skipped.'
+    elif percentage_length > 10 and percentage_length < 30:
+        length_condition = 'Subject to your interpretation.'
+    else:
+        length_condition = 'Exon length is too large to be skipped.'
 
     # Get OMIM identifier
     try:
@@ -326,8 +370,10 @@ def exploit_variant_validator(MANE_select_NM_variant):
             data_rnavariant = json.loads(req_rnavariant.content)
 
             consequence_skipping = data_rnavariant[MANE_select_NM_exon]["rna_variant_descriptions"]["translation"]
+            r_exon_skip = data_rnavariant[MANE_select_NM_exon]["rna_variant_descriptions"]["rna_variant"]
         except:
             consequence_skipping = 'N/A'
+            r_exon_skip = 'N/A'
     except:
         MANE_select_NM_exon = 'N/A'
 
@@ -341,17 +387,31 @@ def exploit_variant_validator(MANE_select_NM_variant):
         exon_number, \
         total_exons, \
         exon_number_interpretation, \
+        coding_exons, \
         NC_exon_NC_format, \
         exon_length, \
         nearest_splice_distant, \
+        nearest_end, \
         total_protein_length, \
         percentage_length, \
+        length_condition, \
         frame, \
+        splice_dist_interpretation, \
         consequence_skipping, \
+        r_exon_skip, \
         MANE_select_NM_exon
 
+def check_gene_eligibility(gene_symbol):
+    # Read excel file
+    df = pd.read_excel("flaskr/data/DCRT_gene_list.xlsx", sheet_name='Gene List', engine='openpyxl')
+    try:
+        elig = str(df.loc[int(df[df['Entity Name'] == gene_symbol].index[0]), 'Eligibility'])
+    except:
+        elig = 'N\A'
 
-def get_uniprot_info(ENSG_gene_id):
+    return elig
+
+def get_uniprot_info(ENSG_gene_id, r_exon_skip):
     # This function provides the UniProt link (TO DO: add credits) and general domain information
     # (note: not exon to be skipped focused)
     # Input: ENSG gene identifier (without version number)
@@ -366,19 +426,42 @@ def get_uniprot_info(ENSG_gene_id):
         uniprot_id = 'N/A'
         uniprot_link = 'N/A'
 
-    # Get general domain info
-    try:
-        file = urllib.request.urlopen(f'https://rest.uniprot.org/uniprotkb/{uniprot_id}.xml')
-        data = file.read()
-        file.close()
-        # Convert xml to dict
-        uniprot_dict = xmltodict.parse(data)
-        # Retrieve domain information
-        domain_info = uniprot_dict['uniprot']['entry']['comment'][7]['text']['#text']
-    except:
-        domain_info = 'N/A'
+    # Get the exon coordinates in the protein sequence
+    var1, var2 = re.findall(r'\d+', r_exon_skip.split(':')[1])
+    begin = round(int(var1)/3)
+    end = round(int(var2)/3)
 
-    return uniprot_link, domain_info
+    # Get general domain info
+    domain_info = ''
+    file = urllib.request.urlopen(f'https://rest.uniprot.org/uniprotkb/{uniprot_id}.xml')
+    data = file.read()
+    file.close()
+    # Convert xml to dict
+    uniprot_dict = xmltodict.parse(data)
+
+    # To print the protein name
+    try:
+        prot_name = (uniprot_dict['uniprot']['entry']['protein']['recommendedName']['fullName'])
+    except:
+        prot_name = 'N/A'
+
+    try:
+        short_name = (uniprot_dict['uniprot']['entry']['protein']['recommendedName']['shortName'])
+    except:
+        short_name = 'N/A'
+
+    # Retrieve domain information
+    for entry in uniprot_dict['uniprot']['entry']['feature']:
+        try:
+            start_exon_p = entry['location']['begin']['@position']
+            end_exon_p = entry['location']['end']['@position']
+            if not(int(start_exon_p) < int(begin) and int(end_exon_p) < int(begin)):
+                if not(int(start_exon_p) > int(end) and int(end_exon_p) > int(end)):
+                    domain_info += entry['@description'] + ': from ' + start_exon_p + ' to ' + end_exon_p + '\n\t\t\t\t\t\t'
+        except:
+            continue
+
+    return uniprot_link, domain_info, prot_name, short_name
 
 
 def get_gtexportal_json(ENSG_gene_id):

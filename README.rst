@@ -49,6 +49,7 @@ Install other required packages if not installed already::
     > py -m pip install requests
     > py -m pip install xmltodict
     > py -m pip install pandas
+    > py -m pip install openpyxl 
 
 
 Run
