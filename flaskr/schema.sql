@@ -19,6 +19,11 @@ CREATE TABLE post (
   --gene
   gene_symbol TEXT,
   ENSG_gene_id TEXT,
+  elig TEXT,
+
+  --protein
+  prot_name TEXT,
+  short_name TEXT,
 
   --variant
   NC_variant TEXT,
@@ -32,13 +37,18 @@ CREATE TABLE post (
   exon_number TEXT,
   total_exons TEXT,
   exon_number_interpretation TEXT,
+  coding_exons TEXT,
   NC_exon TEXT,
   exon_length TEXT,
   total_protein_length TEXT,
   percentage_length TEXT,
+  length_condition TEXT,
   nearest_splice_distant TEXT,
+  nearest_end TEXT,
   frame TEXT,
+  splice_dist_interpretation TEXT, 
   MANE_select_NM_exon TEXT,
+  r_exon_skip TEXT,
   MANE_select_ENST_exon TEXT,
   consequence_skipping TEXT,
 
@@ -59,10 +69,10 @@ CREATE TABLE post (
   --lovd
   lovd_output TEXT,
 
-    --identifiers
+  --identifiers
   omim_id TEXT,
 
-    --links
+  --links
   omim_link TEXT,
   gnomAD_link TEXT,
   decipher_link TEXT,
@@ -70,6 +80,3 @@ CREATE TABLE post (
 
   FOREIGN KEY (author_id) REFERENCES user (id)
 );
-
-
-

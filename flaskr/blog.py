@@ -29,6 +29,11 @@ def output():
         # Show gene info
         "gene_symbol,"
         "ENSG_gene_id,"
+        "elig,"
+
+        # Show protein info
+        "prot_name,"
+        "short_name,"
 
         # Show variant info
         "NC_variant,"
@@ -42,13 +47,18 @@ def output():
         "exon_number,"
         "total_exons,"
         "exon_number_interpretation,"
+        "coding_exons,"
         "NC_exon,"
         "exon_length,"
         "nearest_splice_distant,"
+        "nearest_end,"
         "total_protein_length,"
         "percentage_length,"
+        "length_condition,"
         "frame,"
+        "splice_dist_interpretation,"
         "MANE_select_NM_exon,"
+        "r_exon_skip,"
         "MANE_select_ENST_exon,"
         "consequence_skipping,"
 
@@ -155,14 +165,22 @@ def create():
                 exon_number, \
                 total_exons, \
                 exon_number_interpretation, \
+                coding_exons, \
                 NC_exon, \
                 exon_length, \
                 nearest_splice_distant, \
+                nearest_end, \
                 total_protein_length, \
                 percentage_length, \
+                length_condition, \
                 frame, \
+                splice_dist_interpretation, \
                 consequence_skipping, \
+                r_exon_skip, \
                 MANE_select_NM_exon = exploit_variant_validator(MANE_select_NM_variant)
+
+                # Get gene eligibility
+                elig = check_gene_eligibility(gene_symbol)
 
                 # Get LOVD information
                 lovd_output = get_lovd_info(hg38_variant, NC_variant)
@@ -177,7 +195,10 @@ def create():
                 decipher_link = 'https://www.deciphergenomics.org/sequence-variant/' + hg38_variant
                 clinvar_link = 'https://www.ncbi.nlm.nih.gov/clinvar/?term=' + MANE_select_NM_variant
 
-                uniprot_link, domain_info = get_uniprot_info(ENSG_gene_id)
+                uniprot_link, \
+                domain_info, \
+                prot_name, \
+                short_name = get_uniprot_info(ENSG_gene_id, r_exon_skip)
 
                 # Get expressions
                 expression_brain, expression_fibroblasts, expression_tibial_nerve, expression_blood, expression_transformed_lymphocytes = get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant)
@@ -197,6 +218,11 @@ def create():
                     # gene
                     "gene_symbol,"
                     "ENSG_gene_id,"
+                    "elig,"
+
+                    # protein
+                    "prot_name,"
+                    "short_name,"
 
                     # variant
                     "NC_variant,"
@@ -210,13 +236,18 @@ def create():
                     "exon_number,"
                     "total_exons,"
                     "exon_number_interpretation,"
+                    "coding_exons,"
                     "NC_exon,"
                     "exon_length,"
                     "nearest_splice_distant,"
+                    "nearest_end,"
                     "total_protein_length,"
                     "percentage_length,"
+                    "length_condition,"
                     "frame,"
+                    "splice_dist_interpretation,"
                     "MANE_select_NM_exon,"
+                    "r_exon_skip,"
                     "MANE_select_ENST_exon,"
                     "consequence_skipping,"
 
@@ -245,10 +276,10 @@ def create():
                     "gnomAD_link,"
                     "decipher_link,"
                     "clinvar_link)"
-                    "VALUES (?, ?, ?, ?, ?, ?, ?,"
-                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
-                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 
                     (# user
                     title,
@@ -257,6 +288,11 @@ def create():
                     # gene
                     gene_symbol,
                     ENSG_gene_id,
+                    elig,
+
+                    # protein
+                    prot_name,
+                    short_name,
 
                     # variant
                     NC_variant,
@@ -270,13 +306,18 @@ def create():
                     exon_number,
                     total_exons,
                     exon_number_interpretation,
+                    coding_exons,
                     NC_exon,
                     exon_length,
                     nearest_splice_distant,
+                    nearest_end,
                     total_protein_length,
                     percentage_length,
+                    length_condition,
                     frame,
+                    splice_dist_interpretation,
                     MANE_select_NM_exon,
+                    r_exon_skip,
                     MANE_select_ENST_exon,
                     consequence_skipping,
 
