@@ -44,7 +44,7 @@ def check_for_hgvs_format(uploaded_variant):
         for error in errors.values():
             syntax_message += error + ' '
 
-    # Add suggested correction to the syntex message if any suggestion exists
+    # Add suggested correction to the syntax message if any suggestion exists
     # A new try-except statement is used since suggested correction are not provided for all wrong syntaxes
     if suggested_corrections != []:
         try:
@@ -99,7 +99,7 @@ def get_MANE_select_identifiers(uploaded_variant):
 
     return MANE_select_NM_variant, MANE_select_ENST_variant
 
-
+# Can cache this (?)
 def get_strand(ENSG_gene_id):
     """
     This function retrieves the strand of the gene from Ensembl
@@ -118,11 +118,13 @@ def get_strand(ENSG_gene_id):
         return 'N/A'
 
 def reformat_hg38_positions(NC_variant):
-    # This function converts the hg38 genomic description (i.e. NC_000023.11:g.49075445_49075447del) to a format
-    # that is accepted by LOVD (i.e. g.49075445_49075447). Note that chromosome information is not needed since
-    # LOVD already known to which chromosome the gene belongs
-    # Input: hg38 genomic description
-    # Output: LOVD conform hg38 description
+    """
+    This function converts the hg38 genomic description (i.e. NC_000023.11:g.49075445_49075447del) to a format
+    that is accepted by LOVD (i.e. g.49075445_49075447). Note that chromosome information is not needed since
+    LOVD already known to which chromosome the gene belongs
+    Input: hg38 genomic description
+    Output: LOVD conform hg38 description
+    """
     try:
         hg38_coordinates = NC_variant.split('.')[-1].split('_')
 
@@ -151,6 +153,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
                                         f'{MANE_select_NM_variant}/{NM_id}?content-type=application%2Fjson')
     data_variantvalidator = json.loads(req_variantvalidator.content)
 
+    # can be cached (?)
     req_gene2transcripts = requests.get(f'https://rest.variantvalidator.org/VariantValidator/tools/gene2transcripts_v2/'
                                         f'{NM_id}/{NM_id}?content-type=application%2Fjson')
     data_gene2transcripts = json.loads(req_gene2transcripts.content)
@@ -223,15 +226,10 @@ def exploit_variant_validator(MANE_select_NM_variant):
     try:
         coding_end = data_gene2transcripts["transcripts"][0]["coding_end"]
         coding_start = data_gene2transcripts["transcripts"][0]["coding_start"]
-#        total_protein_length = round((abs(coding_end - coding_start) + 1) / 3)  # Note we have to do +1 because of the
-        # way of counting
+        # - 3 (stop codon does not produce an amino acid) + 1 (to account for mathematical subtraction)
         total_protein_length = (abs(coding_end - coding_start) - 2) / 3
     except:
         total_protein_length = 'N/A'
-
-    # First and last exons can't be skipped. If the variant concerns the first or last exon, show message. Else leave
-    # this message empty. !!!This needs to be designed better!!!
-    exon_number_interpretation = ''
 
     # Get the exon skip in NC format and save the exon length
     # Besides, calculate distance to nearest splice site
@@ -242,7 +240,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         upper_limit_variant_hg38 = lower_limit_variant_hg38
 
-    # To get the coding exon positions
+    # Get the coding exon positions
     try:
         for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence]["exon_structure"]:
             transcript_start = exon["transcript_start"]
@@ -256,6 +254,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         coding_exons = 'N/A'
 
+    # Format the NC_exon_description
     try:
         for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence] \
                 ["exon_structure"]:
@@ -272,8 +271,10 @@ def exploit_variant_validator(MANE_select_NM_variant):
                 elif exon_number == str(last_coding):
                     exon_length_nu = exon_length_nu - int(data_gene2transcripts["transcripts"][0]["coding_end"]) + 1
                     exon_number_interpretation = "Last exon can't be skipped."
+                else:
+                    exon_number_interpretation = ""
 
-                # Get nearest splice site
+                # Get nearest splice site and which side (5'/3')
                 distance_1 = int(lower_limit_variant_hg38) - int(exon_start)
                 distance_2 = int(exon_end) - int(upper_limit_variant_hg38)
                 if distance_1 < distance_2:
@@ -352,18 +353,19 @@ def exploit_variant_validator(MANE_select_NM_variant):
         f'mane_select?content-type=application%2Fjson')
     data_exon_variantvalidator = json.loads(req_exon_variantvalidator.content)
 
-    # Get consequence of skipping
+    # Get consequence of skipping in protein (issue solved by VV)
     try:
         for key in data_exon_variantvalidator.keys():
             if key.startswith(NM_id):
                 MANE_select_NM_exon = key
         try:
             if '+' in MANE_select_NM_exon:
-                # Format the r. exon skip id
+                # Format the r. exon skip id (need to fix this as per Ivo's instructions)
                 MANE_select_exon_split = re.split('[_:.+]', MANE_select_NM_exon)
                 NM_r_exon = (NM_id + ":r." + str(int(MANE_select_exon_split[4]) - int(MANE_select_exon_split[-1][-4])) + "_" + MANE_select_exon_split[5] + "del")
             else:
                 NM_r_exon = MANE_select_NM_exon.replace("c", "r")
+
             # Query the API to get the consequence of skipping
             req_rnavariant = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/'
                                         f'{NM_r_exon}/{NM_id}?content-type=application%2Fjson')
@@ -402,6 +404,13 @@ def exploit_variant_validator(MANE_select_NM_variant):
         MANE_select_NM_exon
 
 def check_gene_eligibility(gene_symbol):
+    """
+    This function checks whether the gene is contained in the DCRT_gene_list and prints out its eligibility.
+    Input: HGNC Gene Symbol
+    Output: Eligibility 1/2/3/N/A as per gene list
+
+    Gene list stored in data file, need to reupload in case of new additions or updates.
+    """
     # Read excel file
     df = pd.read_excel("flaskr/data/DCRT_gene_list.xlsx", sheet_name='Gene List', engine='openpyxl')
     try:
@@ -412,10 +421,11 @@ def check_gene_eligibility(gene_symbol):
     return elig
 
 def get_uniprot_info(ENSG_gene_id, r_exon_skip):
-    # This function provides the UniProt link (TO DO: add credits) and general domain information
-    # (note: not exon to be skipped focused)
-    # Input: ENSG gene identifier (without version number)
-    # Output: UniProt gene link and exon corresponding domain information
+    """
+    This function provides the UniProt link (TO DO: add credits) and exon-specific domain information
+    Input: ENSG gene identifier (without version number)
+    Output: UniProt protein link, exon-specific domain information, protein name and symbol
+    """
     try:
         req = requests.get(f'https://mygene.info/v3/gene/{ENSG_gene_id}?fields=uniprot')
         data = json.loads(req.content)
@@ -442,15 +452,19 @@ def get_uniprot_info(ENSG_gene_id, r_exon_skip):
     # To print the protein name
     try:
         prot_name = (uniprot_dict['uniprot']['entry']['protein']['recommendedName']['fullName'])
+        if isinstance(prot_name, str) == False:
+            prot_name = (uniprot_dict['uniprot']['entry']['protein']['recommendedName']['fullName']['#text'])
     except:
         prot_name = 'N/A'
 
     try:
         short_name = (uniprot_dict['uniprot']['entry']['protein']['recommendedName']['shortName'])
+        if isinstance(short_name, str) == False:
+            short_name = (uniprot_dict['uniprot']['entry']['protein']['recommendedName']['shortName']['#text'])
     except:
         short_name = 'N/A'
 
-    # Retrieve domain information
+    # Retrieve exon-specific domain information (need to figure out how to access evidence links)
     for entry in uniprot_dict['uniprot']['entry']['feature']:
         try:
             start_exon_p = entry['location']['begin']['@position']
@@ -465,9 +479,11 @@ def get_uniprot_info(ENSG_gene_id, r_exon_skip):
 
 
 def get_gtexportal_json(ENSG_gene_id):
-    # This function facilitates checking for which ENSG gene id version GTEx Portal data is available
-    # Input: ENSG gene id with version number
-    # Output: GTEx Portal data
+    """
+    This function facilitates checking for which ENSG gene id version GTEx Portal data is available
+    Input: ENSG gene id with version number
+    Output: GTEx Portal data
+    """
     url_gtexportal = f'https://gtexportal.org/rest/v1/expression/medianTranscriptExpression?datasetId=gtex_v8 \
                         &gencodeId={ENSG_gene_id}&format=json'
     r_gtex = requests.get(url_gtexportal)
@@ -476,13 +492,15 @@ def get_gtexportal_json(ENSG_gene_id):
 
 
 def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
-    # This function checks in which (non-eye) tissues the MANE select transcript is expressed
-    # It uses the GTExPortal 'Bulk tissue gene expression' data (TO DO: add credits)
-    # Input: ENSG gene id with version number and the MANE select ENST variant
-    # Output: expression levels (yes/no) of non-eye tissues
+    """
+    This function checks in which (non-eye) tissues the MANE select transcript is expressed
+    It uses the GTExPortal 'Bulk tissue gene expression' data (TO DO: add credits)
+    Input: ENSG gene id with version number and the MANE select ENST variant
+    Output: expression levels (yes/no) of non-eye tissues
 
-    # GTEx Portal has not always included the latest ENSG version. Therefore select data from the
-    # ENSG version that is present
+    GTEx Portal has not always included the latest ENSG version. Therefore, select data from the
+    ENSG version that is present
+    """
     ENSG_version = 0
     ENST_without_version = MANE_select_ENST_variant.split('.')[0] + '.'
 
@@ -491,7 +509,7 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
         ENSG_version += 1
 
     # IMPLEMENT THIS LATER IN THE TOOL
-    # TO DO: find a way to inform the user that not the latest ENSG version is used to employ GTEx Portal
+    # TO DO: find a way to inform the user that the latest ENSG version is not used to employ GTEx Portal
     # if ENSG_gene_id != ENSG_gene_id + '.' + str(ENSG_version):
     #     print('\n***!WARNING!***\n' + ENSG_gene_id + '.' + str(
     #         ENSG_version) + ' is utilized instead of ' + ENSG_gene_id +
@@ -533,6 +551,7 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
                     transcript_in_tissue['tissueSiteDetailId'] == 'Cells_EBV-transformed_lymphocytes' and \
                     transcript_in_tissue['median'] != 0:
                 expression_transformed_lymphocytes = 'yes'
+
         # If data is not available, set expression levels to N/A
         except:
             expression_brain = 'N/A'
@@ -548,11 +567,13 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
            expression_transformed_lymphocytes
 
 def get_eye_expression(ENSG_gene_id):
-    # This function checks whether the gene is expressed in the periphery retina and the center retina
-    # Normalized eye expression data is retrieved from the Human Eye Transcriptome Atlas (TO DO: add credits)
-    # When two out of three samples of either periphery or center data show expression, expression is assumed to be true
-    # Input: ENSG gene identifier
-    # Output: periphery and center retina expressions (Yes/No/N/A)
+    """
+    This function checks whether the gene is expressed in the periphery retina and the center retina
+    Normalized eye expression data is retrieved from the Human Eye Transcriptome Atlas (TO DO: add credits)
+    When two out of three samples of either periphery or center data show expression, expression is assumed to be true
+    Input: ENSG gene identifier
+    Output: periphery and center retina expressions (Yes/No/N/A)
+    """
 
     query_gene = ENSG_gene_id.split('.')[0]
     eye_data = open('flaskr/data/retina_data_threshold_implemented.csv').readlines()
@@ -578,11 +599,13 @@ def get_eye_expression(ENSG_gene_id):
 
 
 def get_lovd_info(hg38_variant, NC_variant):
-    # This function checks if there are exact matches available in the LOVD database (TO DO: add credits)
-    # Currently it's only checking the hg19 based database, this should be elaborated with hg18 and hg17.
-    # Input: the variant in hg38 format, the variant with NC as reference
-    # Output: A string containing the number of hits per found gene and the corresponding link
-    # TO DO: IMPROVE THIS OUTPUT FORMAT, THINK OF A WAY TO CONVENIENTLY STORE THIS IN A SQL FORMAT
+    """
+    This function checks if there are exact matches available in the LOVD database (TO DO: add credits)
+    Currently it's only checking the hg19 based database, this should be elaborated with hg18 and hg17.
+    Input: the variant in hg38 format, the variant with NC as reference
+    Output: A string containing the number of hits per found gene and the corresponding link
+    TO DO: IMPROVE THIS OUTPUT FORMAT, THINK OF A WAY TO CONVENIENTLY STORE THIS IN A SQL FORMAT
+    """
 
     exact_lovd_match_link = 'N/A'
 
@@ -602,7 +625,7 @@ def get_lovd_info(hg38_variant, NC_variant):
             genes_containing_exact_hits[gene] = url_data["DNA"][i]
 
         # Remove duplicates if any
-#        genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
+        # genes_containing_exact_hits = list(dict.fromkeys(genes_containing_exact_hits))
 
     except:
         genes_containing_exact_hits = 'N/A'
