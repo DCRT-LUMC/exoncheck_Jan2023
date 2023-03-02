@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>Exons </h1>
+  {% if g.user %}
+    <a class="action" href="{{ url_for('exoncheck.create') }}">Upload variant/gene</a>
+    <a class="action" href="{{ url_for('exoncheck.output') }}">View previous uploads</a>
+    <a class="action" href="{{ url_for('exoncheck.gene_output') }}">View previous gene uploads</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <h3>{{ NM_id }} > {{ NC_id }}</h3>
+  <h3>In-frame Exons</h3>
+  {% for exon in in_frame_exons %}
+  <a class="click-to-fill" href="#submit">{{ exon }}</a>,
+  {% endfor %}
+
+  <h3>Out-of-frame Exons</h3>
+  {% for exon in out_of_frame_exons %}
+  <a class="click-to-fill" href="#submit">{{ exon }}</a>,
+  {% endfor %}
+
+  <form method="post">
+    <label for="exon_number">Exon No.</label>
+    <input name="exon_number" id="exon_number" value="{{ request.form['exon_number'] }}" >
+      <input type="submit" id="submit" value="Save">
+  </form>
+
+  <script>
+    const input= document.querySelector('#exon_number');
+    const links = document.querySelectorAll('.click-to-fill');
+
+    for (const link of links) {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        input.value = event.target.textContent;
+      });
+    }
+  </script>
+{% endblock %}
