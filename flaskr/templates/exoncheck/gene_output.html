@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>Previous uploads (Exons)</h1>
+  {% if g.user %}
+    <a class="action" href="{{ url_for('exoncheck.create') }}">Upload variant/gene</a>
+    <a class="action" href="{{ url_for('exoncheck.output') }}">View previous variant uploads</a>
+    <a class="action" href="{{ url_for('exoncheck.information') }}">More info</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% for exon in exons %}
+  <details class="post">
+    <summary>{{ exon['input_gene'] }} - Exon {{ exon['exon_number'] }}                                                                                       <pre> Uploaded on: {{ exon['created'] }} </pre>
+    <pre>(<a class="action" href="{{ url_for('exoncheck.updateExon', id=exon['id']) }}">Delete</a>) </pre>
+    </summary>
+      <header>
+        <div>
+          <h3><pre>GENE                                                                                                                                      DCRT EVALUATION</pre></h3>
+          <pre>Gene symbol (HGNC):                          {{ exon['input_gene'] }}                                                 Eligibility: {{ exon['elig'] }}</pre>
+          <pre>NM id:                                       {{ exon['NM_id'] }}</pre>
+          <pre>NC id:                                       {{ exon['NC_id'] }}</pre>
+
+          <h3>EXON TO BE SKIPPED</h3>
+          <pre>---GENOMIC---</pre>
+          <pre>Exon number:                                 {{ exon['exon_number'] }} / {{ exon['total_exons'] }}  (Coding exons: {{ exon['coding_exons'] }})                          <b>{{exon['exon_number_interpretation']}}</b></pre>
+          <pre>Hg38 description:                            {{ exon['NC_exon'] }}</pre>
+          <pre>Exon length:                                 {{ exon['exon_length'] }} / {{ exon['total_protein_length'] }} ({{ exon['percentage_length'] }}%) (aa)                          <b>{{ exon['length_condition'] }}</b></pre>
+          <pre>Frame:                                       {{ exon['frame'] }}</pre>
+
+          <pre>---TRANSCRIPT---</pre>
+          <pre>Skip:                                        {{ exon['MANE_select_NM_exon'] }} </pre>
+          <pre>                                             {{ exon['r_exon_skip'] }}</pre>
+
+          <pre>---PROTEIN---</pre>
+          <pre>Consequence of skipping:                     {{ exon['consequence_skipping'] }}</pre>
+
+        </div>
+      </header>
+    </details>
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+  {% endfor %}
+{% endblock %}

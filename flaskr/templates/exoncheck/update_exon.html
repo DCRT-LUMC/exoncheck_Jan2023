@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Delete {{ exon['input_gene'] }} - Exon {{ exon['exon_number'] }}?{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form action="{{ url_for('exoncheck.deleteExon', id=exon['id']) }}" method="post">
+    <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
+  </form>
+{% endblock %}
