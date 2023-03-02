@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>Previous uploads (Variants)</h1>
+  {% if g.user %}
+    <a class="action" href="{{ url_for('exoncheck.create') }}">Upload variant/gene</a>
+    <a class="action" href="{{ url_for('exoncheck.gene_output') }}">View previous gene uploads</a>
+    <a class="action" href="{{ url_for('exoncheck.information') }}">More info</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% for variant in variants %}
+  <details class="post">
+    <summary>{{ variant['input_variant'] }} - {{ variant['hg']}}                                                                                        <pre> Uploaded on: {{ variant['created'] }} </pre>
+    <pre>(<a class="action" href="{{ url_for('exoncheck.update', id=variant['id']) }}">Delete</a>) </pre>
+    </summary>
+      <header>
+        <div>
+          <h3><pre>GENE                                                                                                                                         DCRT EVALUATION</pre></h3>
+          <pre>Gene symbol:                                 {{ variant['gene_symbol'] }}                                                   <b>Eligibility:</b> {{ variant['elig'] }}</pre>
+          <pre>ENSG gene id:                                {{ variant['ENSG_gene_id'] }}</pre>
+
+          <h3>PROTEIN</h3>
+          <pre>Recommended name:                            {{ variant['prot_name'] }}</pre>
+          <pre>Protein symbol:                              {{ variant['short_name'] }}</pre>
+
+          <h3>VARIANT</h3>
+          <pre>---GENOMIC---</pre>
+          <pre>NC description:                              {{ variant['NC_variant'] }}</pre>
+          <pre>Strand:                                      {{ variant['strand'] }}</pre>
+          <pre>                                             {{ variant['hg_variant'] }}</pre>
+
+          <pre>---TRANSCRIPT---</pre>
+          <pre>MANE select                                  {{ variant['MANE_select_NM_variant'] }} </pre>
+          <pre>                                             {{ variant['MANE_select_ENST_variant'] }} </pre>
+
+          <pre>---PROTEIN---</pre>
+          <pre>Mutation:                                    {{ variant['consequence_variant'] }} </pre>
+
+          <h3>EXON TO BE SKIPPED</h3>
+          <pre>---GENOMIC---</pre>
+          <pre>Exon number:                                 {{ variant['exon_number'] }} / {{ variant['total_exons'] }}  (Coding exons: {{ variant['coding_exons'] }})                          <b>{{ variant['exon_number_interpretation'] }}</b></pre>
+          <pre>Hg description:                              {{ variant['NC_exon'] }}</pre>
+          <pre>Exon length:                                 {{ variant['exon_length'] }} / {{ variant['total_protein_length'] }} ({{ variant['percentage_length'] }}%) (aa)                           <b>{{ variant['length_condition'] }}</b></pre>
+          <pre>Distance to nearest exon boundary:           {{ variant['nearest_splice_distant'] }} (nt) (from {{ variant['nearest_end'] }})                            <b>{{ variant['splice_dist_interpretation'] }}</b></pre>
+          <pre>Frame:                                       {{ variant['frame'] }}</pre>
+
+          <pre>---TRANSCRIPT---</pre>
+          <pre>Skip:                                        {{ variant['MANE_select_NM_exon'] }} </pre>
+          <pre>                                             {{ variant['r_exon_skip'] }}</pre>
+
+          <pre>---PROTEIN---</pre>
+          <pre>Consequence of skipping:                     {{ variant['consequence_skipping'] }}</pre>
+
+          <h3>DOMAIN INFO</h3>
+          <pre>Uniprot:                                     <a href="{{ variant['uniprot_link'] }}" target="_blank" rel="noopener noreferrer">{{ variant['uniprot_link'] }}</a></pre>
+          <pre>Domain:                                      {{ variant['domain_info'] }}</pre>
+
+          <h3>EXPRESSION INFO</h3>
+          <pre>GTEX Portal:                                 <a href="{{ variant['gtex_link'] }}" target="_blank" rel="noopener noreferrer">{{ variant['gtex_link'] }}</a></pre>
+          <pre>Expression brain:                            {{ variant['expression_brain'] }}</pre>
+          <pre>Expression fibroblasts:                      {{ variant['expression_fibroblasts'] }}</pre>
+          <pre>Expression tibial_nerve:                     {{ variant['expression_tibial_nerve'] }}</pre>
+          <pre>Expression blood:                            {{ variant['expression_blood'] }}</pre>
+          <pre>Expression tr. lymphocytes:                  {{ variant['expression_transformed_lymphocytes'] }}</pre>
+          <pre>Expression periphery retina:                 {{ variant['expression_periphery_retina'] }}</pre>
+          <pre>Expression center retina:                    {{ variant['expression_center_retina'] }}</pre>
+
+          <h3>LOVD INFO</h3>
+          <pre># exact LOVD matches:                        {{ variant['lovd_output'] }}</pre>
+
+          <h3>LINKS</h3>
+          <pre>OMIM:                                        <a href="{{ variant['omim_link'] }}" target="_blank" rel="noopener noreferrer">{{ variant['omim_link'] }}</a></pre>
+          <pre>gnomAD:                                      <a href="{{ variant['gnomAD_link'] }}" target="_blank" rel="noopener noreferrer">{{ variant['gnomAD_link'] }}</a></pre>
+          <pre>Decipher:                                    <a href="{{ variant['decipher_link'] }}" target="_blank" rel="noopener noreferrer">{{ variant['decipher_link'] }}</a></pre>
+          <pre>ClinVar:                                     <a href="{{ variant['clinvar_link'] }}" target="_blank" rel="noopener noreferrer">{{ variant['clinvar_link'] }}</a></pre>
+
+        </div>
+      </header>
+    </details>
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+  {% endfor %}
+{% endblock %}

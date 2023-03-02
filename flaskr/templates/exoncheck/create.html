@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Upload variant{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="wrapper">
+    <div class="box">
+      <input type="radio" name="box" id="box1" checked>
+      <label for="box1">Single Variant</label>
+      <div class="content">
+        <p> Accepts all HGVS formats. (exonic variants only) </p>
+        <p> Examples: NM_001371596.2:c.416G>T,
+          NC_000023.11:g.32389644G>A,
+          NG_012232.1:g.954966C>T,
+          NP_000085.1:p.Gly1767Arg </p>
+        <form method="post">
+          <label for="variant">Variant (HGVS format)</label>
+          <input name="input_variant" id="input_variant" value="{{ request.form['input_variant'] }}" >
+          <label for="hg">Select a reference genome:</label>
+          <select name="hg" id="hg">
+            <option value="">--Please choose an option--</option>
+            <option value="hg19/GRCh37">hg19/GRCh37</option>
+            <option value="hg38/GRCh38">hg38/GRCh38</option>
+          </select>
+            <input type="submit" value="Save">
+        </form>
+      </div>
+      <input type="radio" name="box" id="box2">
+      <label for="box2">Single Gene</label>
+      <div class="content">
+        <form method="post">
+          <label for="gene">Gene (HGNC format)</label>
+          <input name="input_gene" id="input_gene" value="{{ request.form['input_gene'] }}" >
+          <input type="submit" value="Save">
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
