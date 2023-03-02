@@ -12,6 +12,7 @@ from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 from flaskr.db import get_db
 
+# Creates a blueprint to organize required views for authetication functions.
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 def login_required(view):
@@ -25,11 +26,14 @@ def login_required(view):
 
     return wrapped_view
 
-
+# Registers a function that runs before the view function, no matter what URL is connected.
 @bp.before_app_request
 def load_logged_in_user():
     """If a user id is stored in the session, load the user object from
-    the database into ``g.user``."""
+    the database into ``g.user``.
+
+    Ensures that the current user is logged in when moving from one view to another.
+    """
     user_id = session.get("user_id")
 
     if user_id is None:
@@ -42,7 +46,7 @@ def load_logged_in_user():
 
 @bp.route("/register", methods=("GET", "POST"))
 def register():
-    """Register a new user.
+    """Register a new user using a form.
 
     Validates that the username is not already taken. Hashes the
     password for security.
@@ -68,7 +72,7 @@ def register():
             except db.IntegrityError:
                 # The username was already taken, which caused the
                 # commit to fail. Show a validation error.
-                error = f"User {username} is already registered."
+                error = f"User '{username}' is already registered."
             else:
                 # Success, go to the login page.
                 return redirect(url_for("auth.login"))
@@ -86,6 +90,8 @@ def login():
         password = request.form["password"]
         db = get_db()
         error = None
+
+        # fetchone() returns one row from the query.
         user = db.execute(
             "SELECT * FROM user WHERE username = ?", (username,)
         ).fetchone()
@@ -97,9 +103,10 @@ def login():
 
         if error is None:
             # store the user id in a new session and return to the index
+            # session is used to be able to call the user in case of subsequent requests
             session.clear()
             session["user_id"] = user["id"]
-            return redirect(url_for("blog.welcome"))
+            return redirect(url_for("exoncheck.welcome"))
 
         flash(error)
 
@@ -110,4 +117,4 @@ def login():
 def logout():
     """Clear the current session, including the stored user id."""
     session.clear()
-    return redirect(url_for("blog.welcome"))
+    return redirect(url_for("exoncheck.welcome"))
