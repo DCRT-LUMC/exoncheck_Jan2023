@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>Welcome</h1>
+  {% if g.user %}
+    <a class="action" href="{{ url_for('exoncheck.create') }}">Upload variant/gene</a>
+    <a class="action" href="{{ url_for('exoncheck.output') }}">View previous variant uploads</a>
+    <a class="action" href="{{ url_for('exoncheck.gene_output') }}">View previous gene uploads</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <p>
+    Exoncheck is a tool to evaluate the eligibility of exonic variants
+    for exon-skipping ASO treatments. The tool is currently being developed
+    by Iris Huitink and Sowmiyaa Kumar under the supervision of Marlen Lauffer.
+  </p>
+  <p>
+    Warning: For research purposes only. For further information and interest in this tool,
+    please reach out to dcrt@lumc.nl.
+  </p>
+{% endblock %}
