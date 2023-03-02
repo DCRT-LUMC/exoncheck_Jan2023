@@ -46,7 +46,7 @@ CREATE TABLE post (
   nearest_splice_distant TEXT,
   nearest_end TEXT,
   frame TEXT,
-  splice_dist_interpretation TEXT, 
+  splice_dist_interpretation TEXT,
   MANE_select_NM_exon TEXT,
   r_exon_skip TEXT,
   MANE_select_ENST_exon TEXT,
