@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>Eligibility Criteria</h1>
+  {% if g.user %}
+    <a class="action" href="{{ url_for('exoncheck.create') }}">Upload variant/gene</a>
+    <a class="action" href="{{ url_for('exoncheck.output') }}">View previous variant uploads</a>
+    <a class="action" href="{{ url_for('exoncheck.gene_output') }}">View previous gene uploads</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div>
+  <pre><b><i>                 WARNING: These are eligibility criteria followed by the DCRT and is by no means a rule-of-thumb.</i></b></pre>
+  <h3>GENE</h3>
+  <pre><b>Gene symbol:</b>        Prints HGNC symbol for gene containing the variant.        <b>Eligibility:</b> Based on DCRT gene list (compiled based
+                                                                                    on the phenotype of disease of interest):
+                                                                                    1 -> Most likely can be used for treatment
+                                                                                    2 -> Possibly likely
+                                                                                    3 -> Unlikely
+                                                                                    N/A -> If not in gene list </pre>
+  <pre><b>ENSG gene ID:</b>       Prints Ensembl Gene ID </pre>
+
+  <h3>PROTEIN</h3>
+  <pre><b>Recommended Name:</b>   Prints name of protein coded by the gene of interest</pre>
+  <pre><b>Protein symbol:</b>     Prints protein symbol</pre>
+
+  <h3>VARIANT</h3>
+  <pre>---GENOMIC---</pre>
+  <pre><b>NC Description:</b>     Prints HGVS genomic description of the variant based on the hg38 assembly.</pre>
+  <pre><b>Strand:</b>             Prints strand of gene on which the variant is present.</pre>
+  <pre>---TRANSCRIPT---</pre>
+  <pre><b>MANE Select:</b>        Prints NM_ and ENST_ MANE Select IDs.</pre>
+  <pre>---PROTEIN---</pre>
+  <pre><b>Mutation:</b>           Prints consequence of variant on the protein sequence.</pre>
+
+  <h3>EXON TO BE SKIPPED</h3>
+  <pre>---GENOMIC---</pre>
+  <pre><b>Exon Number:</b>        The exon in which the variant is contained is printed,       If variant is present in first or last (coding)
+                    over the total number of exons present in the gene-of-       exon, the following statements are printed
+                    interest. In parantheses, the coding exon range is also      respectively - "First exon can't be skipped." or
+                    printed.                                                     "Last exon can't be skipped."</pre>
+  <pre><b>Hg38 Description:</b>   Prints HGVS genomic description of the exon of interest
+                    based on the hg38 assembly.</pre>
+  <pre><b>Exon Length:</b>        Prints exon length over the total protein length.            If the exon length (with respect to the total
+                                                                                 length) is:
+                                                                                 <10% -> 'Exon length might be small enough to be
+                                                                                 skipped.'
+                                                                                 10-30% -> 'Subject to your interpretation.',
+                                                                                 >30% -> 'Exon length might be too large to be skipped.'</pre>
+  <pre><b>Distance to near-</b>
+<b>est exon boundary:</b>  Prints distance to nearest exon boundary and in              If the variant is in the first 30% of the
+                    parantheses (3' or 5').                                      coding exon length -> 'Variant might be too close
+                                                                                 to the donor site. (check if naturally skipped)’
+                                                                                 If it is in the last 30% of the coding exon ->
+                                                                                 'Variant might be too close to the acceptor site.
+                                                                                 (check if naturally skipped)'</pre>
+   <pre><b>Frame:</b>              Prints if exon is in-frame or out-of-frame.</pre>
+   <pre>---TRANSCRIPT---</pre>
+   <pre><b>Skip:</b>               Prints c. description and r. description.</pre>
+   <pre>---PROTEIN---</pre>
+   <pre><b>Consequence of</b>
+<b>skipping:</b>           Prints the consequence of skipping the exon in the
+                    protein sequence.</pre>
+   <h3>DOMAIN INFO</h3>
+   <pre><b>Uniprot:</b>            Prints Uniprot link to the protein.</pre>
+   <pre><b>Domain:</b>             Prints functional domains that pass through,
+                    contain or are contained by the exon with
+                    name and range.</pre>
+    <h3>EXPRESSION INFO</h3>
+    <pre>                    Prints Yes/No for whether the gene is expressed in brain/eye.</pre>
+    <h3>LOVD INFO</h3>
+    <pre><b>#exact LOVD</b>
+<b>matches:</b>            Prints exact matches found in LOVD.
+                    <a href="https://databases.lovd.nl/shared/genes">https://databases.lovd.nl/shared/genes</a></pre>
+</div>
+{% endblock %}
