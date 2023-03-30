@@ -213,3 +213,4 @@ input[type=submit] {
 .box input[type="radio"]:checked+label+.content {
 	display: block;
 }
+

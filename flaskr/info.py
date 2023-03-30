@@ -516,15 +516,15 @@ def exploit_variant_validator(MANE_select_NM_variant):
     try:
 #        if frame == 'Out-of-frame':
         if distance_1 < distance_2: # closer to 5' end
-            if distance_1/exon_length_nu <= 0.3:
+            if distance_1 <= 15:
                 splice_dist_interpretation = 'Variant might be too close to the donor site.'
-#            else:
-#                splice_dist_interpretation = 'Variant in the last 30% of the coding exon. Possibly eligible.'
-        elif distance_2 <= distance_1:
-            if distance_2/exon_length_nu <= 0.3:
+            else:
+                splice_dist_interpretation = ''
+        else:
+            if distance_2 <= 15:
                 splice_dist_interpretation = 'Variant might be too close to the acceptor site.'
-#            else:
-#                splice_dist_interpretation = 'Variant in the first 70% of the coding exon. Not eligible.'
+            else:
+                splice_dist_interpretation = ''
     except:
         splice_dist_interpretation = ''
 
@@ -1059,12 +1059,12 @@ def exploit_variant_validator_hg19(uploaded_variant):
     try:
 #        if frame == 'Out-of-frame':
         if distance_1 < distance_2: # closer to 5' end
-            if distance_1/exon_length_nu <= 0.3:
+            if distance_1 <= 15:
                 splice_dist_interpretation = 'Variant might be too close to the donor site.'
 #            else:
 #                splice_dist_interpretation = 'Variant in the last 30% of the coding exon. Possibly eligible.'
         elif distance_2 <= distance_1:
-            if distance_2/exon_length_nu <= 0.3:
+            if distance_2 <= 15:
                 splice_dist_interpretation = 'Variant might be too close to the acceptor site.'
 #            else:
 #                splice_dist_interpretation = 'Variant in the first 70% of the coding exon. Not eligible.'
