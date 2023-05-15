@@ -578,7 +578,6 @@ def exploit_variant_validator(MANE_select_NM_variant):
         consequence_variant, \
         exon_number, \
         total_exons, \
-        exon_number_interpretation, \
         coding_exons, \
         NC_exon_NC_format, \
         exon_length, \
