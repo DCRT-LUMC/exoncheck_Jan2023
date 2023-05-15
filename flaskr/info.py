@@ -162,7 +162,7 @@ def exon_skip(NM_id, latest_reference_sequence, exon_number):
 
             # Query the API to get the consequence of skipping
             req_rnavariant = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/'
-                                        f'{NM_r_exon}/{NM_id}?content-type=application%2Fjson')
+                                        f'{NM_r_exon}/{NM_id}?content-type=application%2Fjson') 
             data_rnavariant = json.loads(req_rnavariant.content)
 
             consequence_skipping = data_rnavariant[MANE_select_NM_exon]["rna_variant_descriptions"]["translation"]
