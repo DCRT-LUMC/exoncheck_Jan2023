@@ -585,7 +585,6 @@ def exploit_variant_validator(MANE_select_NM_variant):
         nearest_end, \
         total_protein_length, \
         percentage_length, \
-        length_condition, \
         frame, \
         splice_dist_interpretation, \
         consequence_skipping, \
