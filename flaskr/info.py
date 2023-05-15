@@ -467,15 +467,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
                 exon_length_nu = int(exon["cigar"][:-1])
                 NC_exon_NC_format = latest_reference_sequence + ':g.' + str(exon_start) + '_' + str(exon_end) + 'del'
 
-                # Include only the coding part for the exon length
-                if exon_number == str(first_coding):
-                    exon_length_nu = exon_length_nu - coding_start + 1
-                    exon_number_interpretation = "First exon can't be skipped."
-                elif exon_number == str(last_coding):
-                    exon_length_nu = exon_length_nu - coding_end + 1
-                    exon_number_interpretation = "Last exon can't be skipped."
-                else:
-                    exon_number_interpretation = ""
+                
                 # Get exon length and percentage in terms of nucleotides
                 coding_exon_length = coding_end - coding_start
                 percentage_length_nu = percentage_length = round(exon_length_nu / coding_exon_length * 100, 2)
