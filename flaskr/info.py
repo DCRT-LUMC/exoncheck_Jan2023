@@ -536,15 +536,6 @@ def exploit_variant_validator(MANE_select_NM_variant):
         percentage_length = 'N/A'
         exon_length = 'N/A'
 
-    # Check exon length conditions
-    percentage_length = int(percentage_length)
-        if percentage_length <= 10:
-            length_condition = 'Exon length might be small enough to be skipped.'
-        elif 10 < percentage_length < 30:
-            length_condition = 'Subject to your interpretation.'
-        else:
-            length_condition = 'Exon length might be too large to be skipped.'
-
     # Get OMIM identifier
     try:
         omim_id = data_variantvalidator[MANE_select_NM_variant]["gene_ids"]["omim_id"][0]  # Index of zero is necessary,
