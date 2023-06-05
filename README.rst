@@ -46,7 +46,7 @@ installing Flaskr::
 
 Install other required packages if not installed already::
 
-    > py -m pip install requirements.txt
+    > py -m pip install -r requirements.txt
 
 
 Run
