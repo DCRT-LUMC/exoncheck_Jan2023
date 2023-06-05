@@ -919,14 +919,9 @@ def exploit_variant_validator_hg19(uploaded_variant):
 
     NM_id = uploaded_variant.split(':')[0]
 
-    req_variantvalidator = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg19/'
-                                        f'{uploaded_variant}/{NM_id}?content-type=application%2Fjson')
-    data_variantvalidator = json.loads(req_variantvalidator.content)
+    data_variantvalidator = fetch_variantvalidator(uploaded_variant)
 
-    # can be cached (?)
-    req_gene2transcripts = requests.get(f'https://rest.variantvalidator.org/VariantValidator/tools/gene2transcripts_v2/'
-                                        f'{NM_id}/{NM_id}?content-type=application%2Fjson')
-    data_gene2transcripts = json.loads(req_gene2transcripts.content)
+    data_gene2transcripts = fetch_gene2transcript(uploaded_variant)
 
     # Get ENSG identifier
     try:
@@ -1076,6 +1071,7 @@ def exploit_variant_validator_hg19(uploaded_variant):
         frame = 'N/A'
 
     # Get interpretation of distance to nearest splice boundary
+    splice_dist_interpretation = ''
     try:
 #        if frame == 'Out-of-frame':
         if distance_1 < distance_2: # closer to 5' end
