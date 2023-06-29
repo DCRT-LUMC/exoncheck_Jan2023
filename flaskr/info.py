@@ -343,6 +343,48 @@ def reformat_hg38_positions(NC_variant):
 
     return hg38_coordinates_for_gene_based_lovd
 
+
+def fetch_variantvalidator(transcript):
+    # VariantValidation API endpoint helper strings
+    vv = "https://rest.variantvalidator.org/VariantValidator/variantvalidator"
+    content_type = "?content-type=application%2Fjson"
+
+    nm_id = transcript.split(':')[0]
+
+    url = f"{vv}/hg38/{transcript}/{nm_id}{content_type}"
+    req_variantvalidator = requests.get(url)
+
+    data = json.loads(req_variantvalidator.content)
+
+    with open('variantvalidator.json', 'wt') as fout:
+        print(json.dumps(data, indent=True), file=fout)
+
+    return data
+
+
+def fetch_gene2transcript(transcript):
+    vv = "https://rest.variantvalidator.org/VariantValidator/tools"
+    content_type = "?content-type=application%2Fjson"
+
+    nm_id = transcript.split(':')[0]
+
+    #url = f"{vv}/gene2transcripts_v2/{nm_id}/{nm_id}/{content_type}"
+    url = f"{vv}/gene2transcripts/{nm_id}{content_type}"
+    req_gene2transcripts = requests.get(url)
+
+    data = json.loads(req_gene2transcripts.content)
+
+    # Throw out all non-MANE transcripts, IF there is at least one MANE transcript
+    transcripts = data["transcripts"]
+    transcripts = [ts for ts in transcripts if ts["annotations"]["mane_select"]]
+    if transcripts:
+        data["transcripts"] = transcripts
+
+    with open('gene2transcripts.json', 'wt') as fout:
+        print(json.dumps(data, indent=True), file=fout)
+
+    return data
+
 def exploit_variant_validator(MANE_select_NM_variant):
     """
     This function retrieves all VariantValidator information
@@ -350,16 +392,10 @@ def exploit_variant_validator(MANE_select_NM_variant):
     Output: TO DO
     """
 
-    NM_id = MANE_select_NM_variant.split(':')[0]
+    data_variantvalidator = fetch_variantvalidator(MANE_select_NM_variant)
 
-    req_variantvalidator = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/'
-                                        f'{MANE_select_NM_variant}/{NM_id}?content-type=application%2Fjson')
-    data_variantvalidator = json.loads(req_variantvalidator.content)
+    data_gene2transcripts = fetch_gene2transcript(MANE_select_NM_variant)
 
-    # can be cached (?)
-    req_gene2transcripts = requests.get(f'https://rest.variantvalidator.org/VariantValidator/tools/gene2transcripts_v2/'
-                                        f'{NM_id}/{NM_id}?content-type=application%2Fjson')
-    data_gene2transcripts = json.loads(req_gene2transcripts.content)
 
     # Get ENSG identifier
     try:
@@ -425,6 +461,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
         exon_number = 'N/A'
         total_exons = 'N/A'
 
+    print(f"exons: {exon_number}/{total_exons}")
     # Get total protein length
     try:
         coding_end = data_gene2transcripts["transcripts"][0]["coding_end"]
@@ -434,6 +471,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         total_protein_length = 'N/A'
 
+    print(f"protein length: {total_protein_length}")
     # Get the exon skip in NC format and save the exon length
     # Besides, calculate distance to nearest splice site
     hg38_coordinates = reformat_hg38_positions(NC_variant)
@@ -443,6 +481,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         upper_limit_variant_hg38 = lower_limit_variant_hg38
 
+    print(f"Upper limit: {upper_limit_variant_hg38}")
     # Get the coding exon positions
     try:
         for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence]["exon_structure"]:
@@ -457,6 +496,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         coding_exons = 'N/A'
 
+    print(f"coding_exons: {coding_exons}")
     # Format the NC_exon_description
     try:
         for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence] \
@@ -489,6 +529,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
         coding_exon_length = 'N/A'
         percentage_length_nu = 'N/A'
 
+    print(f"NC format: {NC_exon_NC_format}")
     # Convert exon length from nucleotides to amino acids
     try:
         exon_length = exon_length_nu/3.0
@@ -504,6 +545,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         frame = 'N/A'
 
+    print(f"frame: {frame}")
     # Get interpretation of distance to nearest splice boundary
     try:
 #        if frame == 'Out-of-frame':
@@ -520,6 +562,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         splice_dist_interpretation = ''
 
+    print(f"splice_dist: {splice_dist_interpretation}")
     # Get percentage of exon length compared to total protein length
     try:
         percentage_length = round(exon_length / total_protein_length * 100, 2)
@@ -535,13 +578,20 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         omim_id = 'N/A'
 
+    print(f"OMIM: {omim_id}")
     # Below is about retrieving information about the exon skip
     # This part needs to be revised and the updated VariantValidator API needs to be implemented (whenever
     # VariantValidator is able to predict the consequence of skipping at protein level based on RNA-reference input)
-    req_exon_variantvalidator = requests.get(
-        f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/{NC_exon_NC_format}/ \ '
-        f'mane_select?content-type=application%2Fjson')
+    url = (
+        f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/{NC_exon_NC_format}/'
+        f'mane_select?content-type=application%2Fjson'
+    )
+    req_exon_variantvalidator = requests.get(url)
     data_exon_variantvalidator = json.loads(req_exon_variantvalidator.content)
+
+    print(NC_exon_NC_format)
+    print(url)
+    NM_id = MANE_select_NM_variant.split(':')[0]
 
     # Get consequence of skipping in protein (issue solved by VV)
     try:
@@ -566,9 +616,13 @@ def exploit_variant_validator(MANE_select_NM_variant):
         except:
             consequence_skipping = 'N/A'
             r_exon_skip = 'N/A'
+            MANE_select_NM_exon = 'N/A'
+        print(f"consequence: {consequence_skipping}, r_exon_skip: {r_exon_skip}")
     except:
         MANE_select_NM_exon = 'N/A'
 
+    exon_number_interpretation = 'N/A'
+    length_condition = 'N/A'
     return \
         NC_variant, \
         hg38_variant, \
@@ -578,6 +632,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
         consequence_variant, \
         exon_number, \
         total_exons, \
+        exon_number_interpretation, \
         coding_exons, \
         NC_exon_NC_format, \
         exon_length, \
@@ -585,6 +640,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
         nearest_end, \
         total_protein_length, \
         percentage_length, \
+        length_condition, \
         frame, \
         splice_dist_interpretation, \
         consequence_skipping, \
@@ -881,14 +937,9 @@ def exploit_variant_validator_hg19(uploaded_variant):
 
     NM_id = uploaded_variant.split(':')[0]
 
-    req_variantvalidator = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg19/'
-                                        f'{uploaded_variant}/{NM_id}?content-type=application%2Fjson')
-    data_variantvalidator = json.loads(req_variantvalidator.content)
+    data_variantvalidator = fetch_variantvalidator(uploaded_variant)
 
-    # can be cached (?)
-    req_gene2transcripts = requests.get(f'https://rest.variantvalidator.org/VariantValidator/tools/gene2transcripts_v2/'
-                                        f'{NM_id}/{NM_id}?content-type=application%2Fjson')
-    data_gene2transcripts = json.loads(req_gene2transcripts.content)
+    data_gene2transcripts = fetch_gene2transcript(uploaded_variant)
 
     # Get ENSG identifier
     try:
@@ -1038,6 +1089,7 @@ def exploit_variant_validator_hg19(uploaded_variant):
         frame = 'N/A'
 
     # Get interpretation of distance to nearest splice boundary
+    splice_dist_interpretation = ''
     try:
 #        if frame == 'Out-of-frame':
         if distance_1 < distance_2: # closer to 5' end
