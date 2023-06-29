@@ -354,7 +354,12 @@ def fetch_variantvalidator(transcript):
     url = f"{vv}/hg38/{transcript}/{nm_id}{content_type}"
     req_variantvalidator = requests.get(url)
 
-    return json.loads(req_variantvalidator.content)
+    data = json.loads(req_variantvalidator.content)
+
+    with open('variantvalidator.json', 'wt') as fout:
+        print(json.dumps(data, indent=True), file=fout)
+
+    return data
 
 
 def fetch_gene2transcript(transcript):
@@ -366,8 +371,19 @@ def fetch_gene2transcript(transcript):
     #url = f"{vv}/gene2transcripts_v2/{nm_id}/{nm_id}/{content_type}"
     url = f"{vv}/gene2transcripts/{nm_id}{content_type}"
     req_gene2transcripts = requests.get(url)
-    return json.loads(req_gene2transcripts.content)
 
+    data = json.loads(req_gene2transcripts.content)
+
+    # Throw out all non-MANE transcripts, IF there is at least one MANE transcript
+    transcripts = data["transcripts"]
+    transcripts = [ts for ts in transcripts if ts["annotations"]["mane_select"]]
+    if transcripts:
+        data["transcripts"] = transcripts
+
+    with open('gene2transcripts.json', 'wt') as fout:
+        print(json.dumps(data, indent=True), file=fout)
+
+    return data
 
 def exploit_variant_validator(MANE_select_NM_variant):
     """
@@ -377,7 +393,9 @@ def exploit_variant_validator(MANE_select_NM_variant):
     """
 
     data_variantvalidator = fetch_variantvalidator(MANE_select_NM_variant)
+
     data_gene2transcripts = fetch_gene2transcript(MANE_select_NM_variant)
+
 
     # Get ENSG identifier
     try:
