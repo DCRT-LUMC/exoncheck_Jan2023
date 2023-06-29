@@ -375,7 +375,7 @@ def fetch_gene2transcript(transcript):
     data = json.loads(req_gene2transcripts.content)
 
     # Throw out all non-MANE transcripts, IF there is at least one MANE transcript
-    transcripts = data["transcripts"]
+    transcripts = data.get("transcripts", list())
     transcripts = [ts for ts in transcripts if ts["annotations"]["mane_select"]]
     if transcripts:
         data["transcripts"] = transcripts
@@ -708,6 +708,7 @@ def get_uniprot_info(ENSG_gene_id, r_exon_skip):
         uniprot_id = 'N/A'
         uniprot_link = 'N/A'
 
+    print(f"r_exon_skip: {r_exon_skip}")
     # Get the exon coordinates in the protein sequence
     var1, var2 = re.findall(r'\d+', r_exon_skip.split(':')[1])
     begin = round(int(var1)/3)
