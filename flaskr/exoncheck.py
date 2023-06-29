@@ -380,7 +380,7 @@ def create():
                             splice_dist_interpretation, \
                             consequence_skipping, \
                             r_exon_skip, \
-                            MANE_select_NM_exon = exploit_variant_validator(MANE_select_NM_variant)
+                            MANE_select_NM_exon = exploit_variant_validator(MANE_select_NM_variant, "hg38")
 
                             # Get gene eligibility
                             elig = check_gene_eligibility(gene_symbol)

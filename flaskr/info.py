@@ -385,7 +385,7 @@ def fetch_gene2transcript(transcript):
 
     return data
 
-def exploit_variant_validator(MANE_select_NM_variant):
+def exploit_variant_validator(MANE_select_NM_variant, build):
     """
     This function retrieves all VariantValidator information
     Input: The variant with the MANE select as reference
@@ -409,24 +409,24 @@ def exploit_variant_validator(MANE_select_NM_variant):
     except:
         gene_symbol = 'N/A'
 
-    # Get hg38 variant
+    # Get variant
     try:
-        NC_variant = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"] \
+        NC_variant = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build] \
             ["hgvs_genomic_description"]
         latest_reference_sequence = NC_variant.split(':')[0]
     except:
         NC_variant = 'N/A'
         latest_reference_sequence = 'N/A'
 
-    # Get hg38 variant position information
+    # Get variant position information
     try:
-        hg38_chr = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["vcf"]["chr"][3:]
-        hg38_pos = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["vcf"]["pos"]
-        hg38_ref = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["vcf"]["ref"]
-        hg38_alt = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["vcf"]["alt"]
-        hg38_variant = hg38_chr + '-' + hg38_pos + '-' + hg38_ref + '-' + hg38_alt
+        chr = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["vcf"]["chr"][3:]
+        pos = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["vcf"]["pos"]
+        ref = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["vcf"]["ref"]
+        alt = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["vcf"]["alt"]
+        variant = chr + '-' + pos + '-' + ref + '-' + alt
     except:
-        hg38_variant = 'N/A'
+        variant = 'N/A'
 
     # Get consequence of variant at protein level
     try:
@@ -438,7 +438,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
 
     # Get the latest NC reference sequence, which is later used for getting exon information
     try:
-        latest_reference_sequence = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"]["hg38"]["hgvs_genomic_description"].split(':')[0]
+        latest_reference_sequence = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["hgvs_genomic_description"].split(':')[0]
     except:
         latest_reference_sequence = 'N/A'
 
@@ -474,14 +474,14 @@ def exploit_variant_validator(MANE_select_NM_variant):
     print(f"protein length: {total_protein_length}")
     # Get the exon skip in NC format and save the exon length
     # Besides, calculate distance to nearest splice site
-    hg38_coordinates = reformat_hg38_positions(NC_variant)
-    lower_limit_variant_hg38 = hg38_coordinates.split('.')[-1].split('_')[0]
+    coordinates = reformat_hg38_positions(NC_variant)
+    lower_limit_variant = coordinates.split('.')[-1].split('_')[0]
     try:
-        upper_limit_variant_hg38 = hg38_coordinates.split('.')[-1].split('_')[1]
+        upper_limit_variant = coordinates.split('.')[-1].split('_')[1]
     except:
-        upper_limit_variant_hg38 = lower_limit_variant_hg38
+        upper_limit_variant = lower_limit_variant
 
-    print(f"Upper limit: {upper_limit_variant_hg38}")
+    print(f"Upper limit: {upper_limit_variant}")
     # Get the coding exon positions
     try:
         for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][latest_reference_sequence]["exon_structure"]:
@@ -513,8 +513,8 @@ def exploit_variant_validator(MANE_select_NM_variant):
                 percentage_length_nu = percentage_length = round(exon_length_nu / coding_exon_length * 100, 2)
 
                 # Get nearest splice site and which side (5'/3')
-                distance_1 = int(lower_limit_variant_hg38) - int(exon_start)
-                distance_2 = int(exon_end) - int(upper_limit_variant_hg38)
+                distance_1 = int(lower_limit_variant) - int(exon_start)
+                distance_2 = int(exon_end) - int(upper_limit_variant)
                 if distance_1 < distance_2:
                     nearest_splice_distant = distance_1
                     nearest_end = "5'"
@@ -583,7 +583,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     # This part needs to be revised and the updated VariantValidator API needs to be implemented (whenever
     # VariantValidator is able to predict the consequence of skipping at protein level based on RNA-reference input)
     url = (
-        f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/{NC_exon_NC_format}/'
+        f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/{build}/{NC_exon_NC_format}/'
         f'mane_select?content-type=application%2Fjson'
     )
     req_exon_variantvalidator = requests.get(url)
@@ -607,7 +607,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
                 NM_r_exon = MANE_select_NM_exon.replace("c", "r")
 
             # Query the API to get the consequence of skipping
-            req_rnavariant = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg38/'
+            req_rnavariant = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/{build}/'
                                         f'{NM_r_exon}/{NM_id}?content-type=application%2Fjson')
             data_rnavariant = json.loads(req_rnavariant.content)
 
@@ -625,7 +625,7 @@ def exploit_variant_validator(MANE_select_NM_variant):
     length_condition = 'N/A'
     return \
         NC_variant, \
-        hg38_variant, \
+        variant, \
         ENSG_gene, \
         omim_id, \
         gene_symbol, \
