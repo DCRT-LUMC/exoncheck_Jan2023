@@ -475,7 +475,13 @@ def exploit_variant_validator(variant, build):
     print(f"protein length: {total_protein_length}")
     # Get the exon skip in NC format and save the exon length
     # Besides, calculate distance to nearest splice site
-    coordinates = reformat_hg38_positions(NC_variant)
+    if build == "hg19":
+        coordinates = reformat_hg19_positions(NC_variant)
+    elif build == "hg38":
+        coordinates = reformat_hg38_positions(NC_variant)
+    else:
+        raise RuntimeError(f"Unknown reference build {build}")
+
     lower_limit_variant = coordinates.split('.')[-1].split('_')[0]
     try:
         upper_limit_variant = coordinates.split('.')[-1].split('_')[1]
@@ -508,7 +514,18 @@ def exploit_variant_validator(variant, build):
                 exon_length_nu = int(exon["cigar"][:-1])
                 NC_exon_NC_format = latest_reference_sequence + ':g.' + str(exon_start) + '_' + str(exon_end) + 'del'
 
-                
+                # Include only the coding part for the exon length
+                coding_start = int(data_gene2transcripts["transcripts"][0]["coding_start"])
+                coding_end = int(data_gene2transcripts["transcripts"][0]["coding_end"])
+                if exon_number == str(first_coding):
+                    exon_length_nu = exon_length_nu - coding_start + 1
+                    exon_number_interpretation = "First exon can't be skipped."
+                elif exon_number == str(last_coding):
+                    exon_length_nu = exon_length_nu - coding_end + 1
+                    exon_number_interpretation = "Last exon can't be skipped."
+                else:
+                    exon_number_interpretation = ""
+                # Get exon length and percentage in terms of nucleotides
                 # Get exon length and percentage in terms of nucleotides
                 coding_exon_length = coding_end - coding_start
                 percentage_length_nu = percentage_length = round(exon_length_nu / coding_exon_length * 100, 2)
@@ -536,6 +553,7 @@ def exploit_variant_validator(variant, build):
         exon_length = exon_length_nu/3.0
     except:
         exon_length = 'N/A'
+    print("exon_length: " + str(exon_length))
 
     # Check if exon is in frame or out-of-frame
     try:
@@ -548,6 +566,7 @@ def exploit_variant_validator(variant, build):
 
     print(f"frame: {frame}")
     # Get interpretation of distance to nearest splice boundary
+    splice_dist_interpretation = ''
     try:
 #        if frame == 'Out-of-frame':
         if distance_1 < distance_2: # closer to 5' end
@@ -571,6 +590,14 @@ def exploit_variant_validator(variant, build):
     except:
         percentage_length = 'N/A'
         exon_length = 'N/A'
+
+    # Check exon length conditions
+    if percentage_length <= 10:
+        length_condition = 'Exon length might be small enough to be skipped.'
+    elif percentage_length > 10 and percentage_length < 30:
+        length_condition = 'Subject to your interpretation.'
+    else:
+        length_condition = 'Exon length might be too large to be skipped.'
 
     # Get OMIM identifier
     try:
@@ -928,262 +955,6 @@ def reformat_hg19_positions(NC_variant):
         hg19_coordinates_for_gene_based_lovd = 'N/A'
 
     return hg19_coordinates_for_gene_based_lovd
-
-def exploit_variant_validator_hg19(uploaded_variant):
-    """
-    This function retrieves all VariantValidator information
-    Input: The variant with the MANE select as reference
-    Output: TO DO
-    """
-
-    NM_id = uploaded_variant.split(':')[0]
-
-    data_variantvalidator = fetch_variantvalidator(uploaded_variant)
-
-    data_gene2transcripts = fetch_gene2transcript(uploaded_variant)
-
-    # Get ENSG identifier
-    try:
-        ENSG_gene = data_variantvalidator[uploaded_variant]["gene_ids"]["ensembl_gene_id"]
-    except:
-        ENSG_gene = 'N/A'
-
-    # Get gene symbol
-    try:
-        gene_symbol = data_variantvalidator[uploaded_variant]["gene_symbol"]
-    except:
-        gene_symbol = 'N/A'
-
-    # Get hg19 variant
-    try:
-        NC_variant = data_variantvalidator[uploaded_variant]["primary_assembly_loci"]["hg19"] \
-            ["hgvs_genomic_description"]
-        hg19_reference_sequence = NC_variant.split(':')[0]
-    except:
-        NC_variant = 'N/A'
-        hg19_reference_sequence = 'N/A'
-
-    # Get hg19 variant position information
-    try:
-        hg19_chr = data_variantvalidator[uploaded_variant]["primary_assembly_loci"]["hg19"]["vcf"]["chr"][3:]
-        hg19_pos = data_variantvalidator[uploaded_variant]["primary_assembly_loci"]["hg19"]["vcf"]["pos"]
-        hg19_ref = data_variantvalidator[uploaded_variant]["primary_assembly_loci"]["hg19"]["vcf"]["ref"]
-        hg19_alt = data_variantvalidator[uploaded_variant]["primary_assembly_loci"]["hg19"]["vcf"]["alt"]
-        hg19_variant = hg19_chr + '-' + hg19_pos + '-' + hg19_ref + '-' + hg19_alt
-    except:
-        hg19_variant = 'N/A'
-
-    # Get consequence of variant at protein level
-    try:
-        consequence_variant = data_variantvalidator[uploaded_variant]["hgvs_predicted_protein_consequence"]["tlr"]
-        consequence_variant = consequence_variant.split('.')[-1][1:-1]  # Extract only mutation type part and
-        # remove the brackets
-    except:
-        consequence_variant = 'N/A'
-
-    # Get exon number
-    try:
-        start_exon_number = data_variantvalidator[uploaded_variant]["variant_exonic_positions"] \
-            [hg19_reference_sequence]["start_exon"]
-        end_exon_number = data_variantvalidator[uploaded_variant]["variant_exonic_positions"] \
-            [hg19_reference_sequence]["end_exon"]
-
-        total_exons = str(data_gene2transcripts["transcripts"][0]["genomic_spans"] \
-                              [hg19_reference_sequence]["total_exons"])
-
-        # If variant covers multiple exons, save the first and last involved exons in variable exon_number
-        if start_exon_number == end_exon_number:
-            exon_number = start_exon_number
-        else:
-            exon_number = start_exon_number + 'till' + end_exon_number
-    except:
-        exon_number = 'N/A'
-        total_exons = 'N/A'
-
-    # Get total protein length
-    try:
-        coding_end = data_gene2transcripts["transcripts"][0]["coding_end"]
-        coding_start = data_gene2transcripts["transcripts"][0]["coding_start"]
-        # - 3 (stop codon does not produce an amino acid) + 1 (to account for mathematical subtraction)
-        total_protein_length = (abs(coding_end - coding_start) - 2) / 3
-    except:
-        total_protein_length = 'N/A'
-
-    # Get the exon skip in NC format and save the exon length
-    # Besides, calculate distance to nearest splice site
-    hg19_coordinates = reformat_hg19_positions(NC_variant)
-    lower_limit_variant_hg19 = hg19_coordinates.split('.')[-1].split('_')[0]
-    try:
-        upper_limit_variant_hg19 = hg19_coordinates.split('.')[-1].split('_')[1]
-    except:
-        upper_limit_variant_hg19 = lower_limit_variant_hg19
-
-    # Get the coding exon positions
-    try:
-        for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][hg19_reference_sequence]["exon_structure"]:
-            transcript_start = exon["transcript_start"]
-            transcript_end = exon["transcript_end"]
-            if coding_start >= transcript_start and coding_start <= transcript_end:
-                first_coding = exon["exon_number"]
-            if coding_end >= transcript_start and coding_end <= transcript_end:
-                last_coding = exon["exon_number"]
-
-        coding_exons = str(first_coding) + " to " + str(last_coding)
-    except:
-        coding_exons = 'N/A'
-
-    # Format the NC_exon_description
-    try:
-        for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][hg19_reference_sequence] \
-                ["exon_structure"]:
-            if str(exon["exon_number"]) == exon_number:
-                exon_end = exon["genomic_end"]
-                exon_start = exon["genomic_start"]
-                exon_length_nu = int(exon["cigar"][:-1])
-                NC_exon_NC_format = hg19_reference_sequence + ':g.' + str(exon_start) + '_' + str(exon_end) + 'del'
-
-                # Include only the coding part for the exon length
-                coding_start = int(data_gene2transcripts["transcripts"][0]["coding_start"])
-                coding_end = int(data_gene2transcripts["transcripts"][0]["coding_end"])
-                if exon_number == str(first_coding):
-                    exon_length_nu = exon_length_nu - coding_start + 1
-                    exon_number_interpretation = "First exon can't be skipped."
-                elif exon_number == str(last_coding):
-                    exon_length_nu = exon_length_nu - coding_end + 1
-                    exon_number_interpretation = "Last exon can't be skipped."
-                else:
-                    exon_number_interpretation = ""
-                # Get exon length and percentage in terms of nucleotides
-                coding_exon_length = coding_end - coding_start
-                percentage_length_nu = percentage_length = round(exon_length_nu / coding_exon_length * 100, 2)
-
-                # Get nearest splice site and which side (5'/3')
-                distance_1 = int(lower_limit_variant_hg19) - int(exon_start)
-                distance_2 = int(exon_end) - int(upper_limit_variant_hg19)
-                if distance_1 < distance_2:
-                    nearest_splice_distant = distance_1
-                    nearest_end = "5'"
-                else:
-                    nearest_splice_distant = distance_2
-                    nearest_end = "3'"
-    except:
-        NC_exon_NC_format = 'N/A'
-        exon_length_nu = 'N/A'
-        nearest_splice_distant = 'N/A'
-        nearest_end = 'N/A'
-        coding_exon_length = 'N/A'
-        percentage_length_nu = 'N/A'
-
-    # Convert exon length from nucleotides to amino acids
-    try:
-        exon_length = exon_length_nu/3.0
-    except:
-        exon_length = 'N/A'
-    print("exon_length: " + str(exon_length))
-    # Check if exon is in frame or out-of-frame
-    try:
-        if exon_length.is_integer():
-            frame = 'In-frame'
-        elif exon_length != 'N/A':
-            frame = 'Out-of-frame'
-    except:
-        frame = 'N/A'
-
-    # Get interpretation of distance to nearest splice boundary
-    splice_dist_interpretation = ''
-    try:
-#        if frame == 'Out-of-frame':
-        if distance_1 < distance_2: # closer to 5' end
-            if distance_1 <= 15:
-                splice_dist_interpretation = 'Variant might be too close to the donor site.'
-#            else:
-#                splice_dist_interpretation = 'Variant in the last 30% of the coding exon. Possibly eligible.'
-        elif distance_2 <= distance_1:
-            if distance_2 <= 15:
-                splice_dist_interpretation = 'Variant might be too close to the acceptor site.'
-#            else:
-#                splice_dist_interpretation = 'Variant in the first 70% of the coding exon. Not eligible.'
-    except:
-        splice_dist_interpretation = ''
-
-    # Get percentage of exon length compared to total protein length
-    try:
-        percentage_length = round(exon_length / total_protein_length * 100, 2)
-        exon_length = str(round(exon_length, 2))
-    except:
-        percentage_length = 'N/A'
-        exon_length = 'N/A'
-
-    # Check exon length conditions
-    if percentage_length <= 10:
-        length_condition = 'Exon length might be small enough to be skipped.'
-    elif percentage_length > 10 and percentage_length < 30:
-        length_condition = 'Subject to your interpretation.'
-    else:
-        length_condition = 'Exon length might be too large to be skipped.'
-
-    # Get OMIM identifier
-    try:
-        omim_id = data_variantvalidator[uploaded_variant]["gene_ids"]["omim_id"][0]  # Index of zero is necessary,
-        # otherwise you get a list
-    except:
-        omim_id = 'N/A'
-
-    # Below is about retrieving information about the exon skip
-    # This part needs to be revised and the updated VariantValidator API needs to be implemented (whenever
-    # VariantValidator is able to predict the consequence of skipping at protein level based on RNA-reference input)
-    req_exon_variantvalidator = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg19/{NC_exon_NC_format}/all?content-type=application%2Fjson')
-    data_exon_variantvalidator = json.loads(req_exon_variantvalidator.content)
-
-    # Get consequence of skipping in protein (issue solved by VV)
-    try:
-        for key in data_exon_variantvalidator.keys():
-            if key.startswith(NM_id):
-                hg19_NM_exon = key
-        try:
-            if '+' in hg19_NM_exon:
-                # Format the r. exon skip id (need to fix this as per Ivo's instructions)
-                hg19_exon_split = re.split('[_:.+]', hg19_NM_exon)
-                NM_r_exon = (NM_id + ":r." + str(int(hg19_exon_split[4]) - int(hg19_exon_split[-1][-4])) + "_" + hg19_exon_split[5] + "del")
-            else:
-                NM_r_exon = hg19_NM_exon.replace("c", "r")
-
-            # Query the API to get the consequence of skipping
-            req_rnavariant = requests.get(f'https://rest.variantvalidator.org/VariantValidator/variantvalidator/hg19/'
-                                        f'{NM_r_exon}/{NM_id}?content-type=application%2Fjson')
-            data_rnavariant = json.loads(req_rnavariant.content)
-
-            consequence_skipping = data_rnavariant[hg19_NM_exon]["rna_variant_descriptions"]["translation"]
-            r_exon_skip = data_rnavariant[hg19_NM_exon]["rna_variant_descriptions"]["rna_variant"]
-        except:
-            consequence_skipping = 'N/A'
-            r_exon_skip = 'N/A'
-    except:
-        hg19_NM_exon = 'N/A'
-
-    return \
-        NC_variant, \
-        hg19_variant, \
-        ENSG_gene, \
-        omim_id, \
-        gene_symbol, \
-        consequence_variant, \
-        exon_number, \
-        total_exons, \
-        exon_number_interpretation, \
-        coding_exons, \
-        NC_exon_NC_format, \
-        exon_length, \
-        nearest_splice_distant, \
-        nearest_end, \
-        total_protein_length, \
-        percentage_length, \
-        length_condition, \
-        frame, \
-        splice_dist_interpretation, \
-        consequence_skipping, \
-        r_exon_skip, \
-        hg19_NM_exon
 
 def get_lovd_info_hg19(hg19_variant, NC_variant):
     """
