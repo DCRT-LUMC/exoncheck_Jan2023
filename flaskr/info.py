@@ -392,6 +392,7 @@ def exploit_variant_validator(MANE_select_NM_variant, build):
     Output: TO DO
     """
 
+    print(f"Genome build: {build}")
     data_variantvalidator = fetch_variantvalidator(MANE_select_NM_variant)
 
     data_gene2transcripts = fetch_gene2transcript(MANE_select_NM_variant)
