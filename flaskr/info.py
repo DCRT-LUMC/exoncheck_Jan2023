@@ -385,7 +385,7 @@ def fetch_gene2transcript(transcript):
 
     return data
 
-def exploit_variant_validator(MANE_select_NM_variant, build):
+def exploit_variant_validator(variant, build):
     """
     This function retrieves all VariantValidator information
     Input: The variant with the MANE select as reference
@@ -393,26 +393,26 @@ def exploit_variant_validator(MANE_select_NM_variant, build):
     """
 
     print(f"Genome build: {build}")
-    data_variantvalidator = fetch_variantvalidator(MANE_select_NM_variant)
+    data_variantvalidator = fetch_variantvalidator(variant)
 
-    data_gene2transcripts = fetch_gene2transcript(MANE_select_NM_variant)
+    data_gene2transcripts = fetch_gene2transcript(variant)
 
 
     # Get ENSG identifier
     try:
-        ENSG_gene = data_variantvalidator[MANE_select_NM_variant]["gene_ids"]["ensembl_gene_id"]
+        ENSG_gene = data_variantvalidator[variant]["gene_ids"]["ensembl_gene_id"]
     except:
         ENSG_gene = 'N/A'
 
     # Get gene symbol
     try:
-        gene_symbol = data_variantvalidator[MANE_select_NM_variant]["gene_symbol"]
+        gene_symbol = data_variantvalidator[variant]["gene_symbol"]
     except:
         gene_symbol = 'N/A'
 
     # Get variant
     try:
-        NC_variant = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build] \
+        NC_variant = data_variantvalidator[variant]["primary_assembly_loci"][build] \
             ["hgvs_genomic_description"]
         latest_reference_sequence = NC_variant.split(':')[0]
     except:
@@ -421,17 +421,17 @@ def exploit_variant_validator(MANE_select_NM_variant, build):
 
     # Get variant position information
     try:
-        chr = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["vcf"]["chr"][3:]
-        pos = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["vcf"]["pos"]
-        ref = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["vcf"]["ref"]
-        alt = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["vcf"]["alt"]
-        variant = chr + '-' + pos + '-' + ref + '-' + alt
+        chr = data_variantvalidator[variant]["primary_assembly_loci"][build]["vcf"]["chr"][3:]
+        pos = data_variantvalidator[variant]["primary_assembly_loci"][build]["vcf"]["pos"]
+        ref = data_variantvalidator[variant]["primary_assembly_loci"][build]["vcf"]["ref"]
+        alt = data_variantvalidator[variant]["primary_assembly_loci"][build]["vcf"]["alt"]
+        hg_variant = chr + '-' + pos + '-' + ref + '-' + alt
     except:
-        variant = 'N/A'
+        hg_variant = 'N/A'
 
     # Get consequence of variant at protein level
     try:
-        consequence_variant = data_variantvalidator[MANE_select_NM_variant]["hgvs_predicted_protein_consequence"]["tlr"]
+        consequence_variant = data_variantvalidator[variant]["hgvs_predicted_protein_consequence"]["tlr"]
         consequence_variant = consequence_variant.split('.')[-1][1:-1]  # Extract only mutation type part and
         # remove the brackets
     except:
@@ -439,15 +439,15 @@ def exploit_variant_validator(MANE_select_NM_variant, build):
 
     # Get the latest NC reference sequence, which is later used for getting exon information
     try:
-        latest_reference_sequence = data_variantvalidator[MANE_select_NM_variant]["primary_assembly_loci"][build]["hgvs_genomic_description"].split(':')[0]
+        latest_reference_sequence = data_variantvalidator[variant]["primary_assembly_loci"][build]["hgvs_genomic_description"].split(':')[0]
     except:
         latest_reference_sequence = 'N/A'
 
     # Get exon number
     try:
-        start_exon_number = data_variantvalidator[MANE_select_NM_variant]["variant_exonic_positions"] \
+        start_exon_number = data_variantvalidator[variant]["variant_exonic_positions"] \
             [latest_reference_sequence]["start_exon"]
-        end_exon_number = data_variantvalidator[MANE_select_NM_variant]["variant_exonic_positions"] \
+        end_exon_number = data_variantvalidator[variant]["variant_exonic_positions"] \
             [latest_reference_sequence]["end_exon"]
 
         total_exons = str(data_gene2transcripts["transcripts"][0]["genomic_spans"] \
@@ -574,7 +574,7 @@ def exploit_variant_validator(MANE_select_NM_variant, build):
 
     # Get OMIM identifier
     try:
-        omim_id = data_variantvalidator[MANE_select_NM_variant]["gene_ids"]["omim_id"][0]  # Index of zero is necessary,
+        omim_id = data_variantvalidator[variant]["gene_ids"]["omim_id"][0]  # Index of zero is necessary,
         # otherwise you get a list
     except:
         omim_id = 'N/A'
@@ -592,7 +592,7 @@ def exploit_variant_validator(MANE_select_NM_variant, build):
 
     print(NC_exon_NC_format)
     print(url)
-    NM_id = MANE_select_NM_variant.split(':')[0]
+    NM_id = variant.split(':')[0]
 
     # Get consequence of skipping in protein (issue solved by VV)
     try:
@@ -626,7 +626,7 @@ def exploit_variant_validator(MANE_select_NM_variant, build):
     length_condition = 'N/A'
     return \
         NC_variant, \
-        variant, \
+        hg_variant, \
         ENSG_gene, \
         omim_id, \
         gene_symbol, \
