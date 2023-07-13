@@ -12,63 +12,61 @@ Currently working on showing the number of hits in the LOVD database
 
 Install
 -------
-Install::
+Mac / Linux:
+~~~~~~~~~~~~
 
-    # clone the repository
-    $ git clone https://github.com/pallets/flask
-    $ cd flask
-    # checkout the correct version
-    $ git tag  # shows the tagged versions
-    $ git checkout latest-tag-found-above
-    $ cd examples/tutorial
+.. code-block:: bash
 
-Create a virtualenv and activate it::
+  # clone the ExonCheck repository
+  git clone https://github.com/DCRT-LUMC/exoncheck_Jan2023.git
 
-    $ python3 -m venv venv
-    $ . venv/bin/activate
+  # Enter the folder
+  cd exoncheck_Jan2023
 
-Or on Windows cmd
-Download zip file, unzip file and go to directory in Windows Powershell. Subsequently do::
+  # Create a vritual environment
+  python3 -m venv venv
+
+  # Activate the virtual environment
+  source venv/bin/activate
+
+  # Install the requirements
+  pip3 install -r requirements.txt 
+
+  # Install ExonCheck
+  pip3 install -e .
+
+  # Set the correct environment variables
+  export FLASK_APP=flaskr
+  export FLASK_ENV=development
+
+  # Create the database (only do this the first time)
+  flask init-db
+
+  # Start the tool
+  flask run
+
+
+Open http://127.0.0.1:5000 in a browser.
+
+Windows:
+~~~~~~~~
+
+Download zip file, unzip file and go to directory in Windows Powershell. Subsequently do:
 
     > py -3 -m venv venv
     > venv\Scripts\activate.bat
 
-
 Install Flaskr::
 
-    > py -m pip install -e .
-
-Or if you are using the main branch, install Flask from source before
-installing Flaskr::
-
-    > py -m pip install -e ../..
     > py -m pip install -e .
 
 Install other required packages if not installed already::
 
     > py -m pip install -r requirements.txt
 
-
-Run
----
-
-::
-
 Initialiase the database (only the first time or if you want a new database, **IT OVERWRITES THE EXISTING DATABASE**)::
 
-    $ flask init-db
-
-Run::
-
-    $ export FLASK_APP=flaskr
-    $ export FLASK_ENV=development
-    $ flask run
-
-Or on Windows cmd::
-
-Initialiase the database (only the first time or if you want a new database, **IT OVERWRITES THE EXISTING DATABASE**)::
-
-    > py -m flask --app flaskr init-db
+> py -m flask --app flaskr init-db
 
 Run::
 
