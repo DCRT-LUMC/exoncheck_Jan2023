@@ -12,10 +12,7 @@ def gene_to_exons(input_gene):
 
     NM_id = (data['externalRecords']['MANE'][0]['nucleotide']['RefSeq']['id'])
 
-    # Get the exonic information from VV
-    req_gene2transcripts = requests.get(f'https://rest.variantvalidator.org/VariantValidator/tools/gene2transcripts_v2/'
-                                        f'{NM_id}/{NM_id}?content-type=application%2Fjson')
-    data_gene2transcripts = json.loads(req_gene2transcripts.content)
+    data_gene2transcripts = fetch_gene2transcript(NM_id)
 
     NC_id = list(data_gene2transcripts["transcripts"][0]["genomic_spans"].keys())[1]
 
