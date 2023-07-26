@@ -33,9 +33,7 @@ def gene_to_exons(input_gene):
     return NM_id, NC_id, in_frame_exons, out_of_frame_exons
 
 def exon_skip(NM_id, latest_reference_sequence, exon_number):
-    req_gene2transcripts = requests.get(f'https://rest.variantvalidator.org/VariantValidator/tools/gene2transcripts_v2/'
-                                f'{NM_id}/{NM_id}?content-type=application%2Fjson')
-    data_gene2transcripts = json.loads(req_gene2transcripts.content)
+    data_gene2transcripts = fetch_gene2transcript(NM_id)
 
     # Get total number of exons
     total_exons = str(data_gene2transcripts["transcripts"][0]["genomic_spans"] \
