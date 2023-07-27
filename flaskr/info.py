@@ -23,7 +23,7 @@ def gene_to_exons(input_gene):
     out_of_frame_exons = []
     for exon in data_gene2transcripts["transcripts"][0]["genomic_spans"][NC_id]["exon_structure"]:
     #    coding_start = data_gene2transcripts["transcripts"][0]["coding_start"]
-        exon_length = int(exon["cigar"][:-1])
+        exon_length = exon['transcript_end'] - exon['transcript_start'] + 1
         if (exon_length/3.0).is_integer():
 #            in_frame[exon["exon_number"]] = [(transcript_start), (transcript_end)]
             in_frame_exons.append(exon["exon_number"])
