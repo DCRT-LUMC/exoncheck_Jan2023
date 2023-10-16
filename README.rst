@@ -39,7 +39,8 @@ Mac / Linux:
   export FLASK_APP=flaskr
   export FLASK_ENV=development
 
-  # Create the database (only do this the first time)
+  # Create the database (only do this the first time, or create a backup first)
+  cp instance/flaskr.sqlite{,.backup}
   flask init-db
 
   # Start the tool
@@ -65,7 +66,7 @@ Install other required packages if not installed already::
     > py -m pip install -r requirements.txt
 
 Initialiase the database (only the first time or if you want a new database, **IT OVERWRITES THE EXISTING DATABASE**)::
-
+> cp instance\flaskr.sqlite instance\flaskr.sqlite.backup
 > py -m flask --app flaskr init-db
 
 Run::
