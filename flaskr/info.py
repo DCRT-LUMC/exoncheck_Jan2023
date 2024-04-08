@@ -369,14 +369,20 @@ def fetch_gene2transcript(transcript):
 
     data = json.loads(req_gene2transcripts.content)
 
+    with open('gene2transcripts.json', 'wt') as fout:
+        print(json.dumps(data, indent=True), file=fout)
+
+    if len(data) == 1:
+        data = data[0]
+    else:
+        raise NotImplementedError("Received multiple payloads from variantvalidator")
+
     # Throw out all non-MANE transcripts, IF there is at least one MANE transcript
     transcripts = data.get("transcripts", list())
     transcripts = [ts for ts in transcripts if ts["annotations"]["mane_select"]]
     if transcripts:
         data["transcripts"] = transcripts
 
-    with open('gene2transcripts.json', 'wt') as fout:
-        print(json.dumps(data, indent=True), file=fout)
 
     return data
 
@@ -752,8 +758,8 @@ def get_gtexportal_json(ENSG_gene_id):
     Input: ENSG gene id with version number
     Output: GTEx Portal data
     """
-    url_gtexportal = f'https://gtexportal.org/rest/v1/expression/medianTranscriptExpression?datasetId=gtex_v8 \
-                        &gencodeId={ENSG_gene_id}&format=json'
+    url_gtexportal = f'https://gtexportal.org/api/v2/expression/medianTranscriptExpression?gencodeId={ENSG_gene_id}&format=json'
+    print(f"{url_gtexportal=}")
     r_gtex = requests.get(url_gtexportal)
     gtex_data = json.loads(r_gtex.text)
     return gtex_data
@@ -769,12 +775,16 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
     GTEx Portal has not always included the latest ENSG version. Therefore, select data from the
     ENSG version that is present
     """
-    ENSG_version = 0
     ENST_without_version = MANE_select_ENST_variant.split('.')[0] + '.'
 
-    while get_gtexportal_json(ENSG_gene_id + '.' + str(ENSG_version))[
-        'medianTranscriptExpression'] == []:
-        ENSG_version += 1
+    # Try version numbers in order, since we are not sure
+    for version in range(100):
+        gtex_data = get_gtexportal_json(f"{ENSG_gene_id}.{version}")
+        if gtex_data["data"]:
+            break
+    else:
+        print(f"WARNING: gene expression for {ENSG_gene_id} not found")
+        gtex_data = {"data": list()}
 
     # IMPLEMENT THIS LATER IN THE TOOL
     # TO DO: find a way to inform the user that the latest ENSG version is not used to employ GTEx Portal
@@ -782,9 +792,6 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
     #     print('\n***!WARNING!***\n' + ENSG_gene_id + '.' + str(
     #         ENSG_version) + ' is utilized instead of ' + ENSG_gene_id +
     #           ' to consult GTEx portal\n')
-
-    gtex_data = get_gtexportal_json(ENSG_gene_id + '.' + str(ENSG_version))
-
     # Set expression level to 'no' unless expression is shown
     expression_brain = 'no'
     expression_fibroblasts = 'no'
@@ -793,7 +800,7 @@ def get_gene_expression(ENSG_gene_id, MANE_select_ENST_variant):
     expression_transformed_lymphocytes = 'no'
 
     # Check if the MANE select transcript is expressed in the following tissues
-    for transcript_in_tissue in gtex_data['medianTranscriptExpression']:
+    for transcript_in_tissue in gtex_data['data']:
         try:
             if ENST_without_version in transcript_in_tissue['transcriptId'] and \
                     'Brain' in transcript_in_tissue['tissueSiteDetailId'] and \
